@@ -1,0 +1,8 @@
+[package]
+name = "rust-playstation-emulator"
+version = "0.1.0"
+authors = ["Jack <admin@deadcore.co.uk>"]
+edition = "2018"
+
+[dependencies]
+log = "0.4.6"
