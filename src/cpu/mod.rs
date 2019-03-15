@@ -32,6 +32,10 @@ pub struct Cpu {
 
     /// Memory interface
     inter: Interconnect,
+
+    /// Next instruction to be executed , used to simulate the branch delay slot
+    next_instruction: Instruction,
+
 }
 
 
@@ -45,6 +49,7 @@ impl Cpu {
             pc: 0xbfc00000,
             regs,
             inter,
+            next_instruction: Instruction(0x0),
         }
     }
 
@@ -59,12 +64,11 @@ impl Cpu {
     }
 
     pub fn run_next_instruction(&mut self) {
-        let pc = self.pc;
-
         self.dump_registers();
 
-        // Fetch instruction at PC
-        let instruction = Instruction(self.load32(pc));
+        let pc = self.pc;
+        let instruction = self.next_instruction;
+        self.next_instruction = Instruction(self.load32(pc));
 
         // Increment PC to point to the next instruction.
         // Wrapping add means that we want the PC to wrap back to 0 in case of an overflow (i.e. 0xfffffffc + 4 => 0x00000000)
@@ -117,7 +121,6 @@ impl Cpu {
     }
 
     fn op_aaddiu(&mut self, instruction: Instruction) {
-
         let i = instruction.shift();
         let t = instruction.t();
         let s = instruction.s();
@@ -130,7 +133,6 @@ impl Cpu {
     }
 
     fn op_sll(&mut self, instruction: Instruction) {
-
         let i = instruction.shift();
         let t = instruction.t();
         let d = instruction.d();
@@ -142,8 +144,8 @@ impl Cpu {
         self.set_reg(d, v)
     }
 
+    /// Load Upper Immediate
     fn op_lui(&mut self, instruction: Instruction) {
-
         let i = instruction.imm();
         let t = instruction.t();
 
@@ -155,7 +157,6 @@ impl Cpu {
     }
 
     fn op_ori(&mut self, instruction: Instruction) {
-
         let i = instruction.imm();
         let t = instruction.t();
         let s = instruction.s();
@@ -168,7 +169,6 @@ impl Cpu {
 
     /// Store word
     fn op_sw(&mut self, instruction: Instruction) {
-
         let i = instruction.imm_se();
         let t = instruction.t();
         let s = instruction.s();
