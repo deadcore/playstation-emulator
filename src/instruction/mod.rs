@@ -5,14 +5,39 @@ pub struct Instruction(pub u32);
 #[derive(Clone, Copy)]
 pub struct RegisterIndex(pub u32);
 
+pub const REGISTERS: [&str; 32] = [
+    "$zero",
+    "$at",
+    "$v0", "$v1",
+    "$a0", "$a1", "$a2", "$a3",
+    "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
+    "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
+    "$t8", "$t9",
+    "$k0", "$k1",
+    "$gp",
+    "$sp",
+    "$fp",
+    "$ra"
+];
+
 impl RegisterIndex {
     pub fn to_usize(self) -> usize {
         self.0 as usize
+    }
+
+    pub fn name(&self) -> &str {
+        REGISTERS[self.to_usize()]
     }
 }
 
 
 impl Instruction {
+    pub fn cop_opcode(self) -> u32 {
+        let Instruction(op) = self;
+
+        (op >> 21) & 0x1f
+    }
+
     /// Return bits [31:26] of the instruction
     pub fn function(self) -> u32 {
         let Instruction(op) = self;

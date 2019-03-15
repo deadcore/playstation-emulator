@@ -22,13 +22,13 @@ impl Interconnect {
             match offset {
                 0 => { // Expansion 1 base address
                     if val != 0x1f000000 {
-                        panic!("Bad expansion 1 base address: 0x {:08x}", val)
+                        panic!("Bad expansion 1 base address: 0x{:08x}", val)
                     }
                 }
 
                 4 => { // Expansion 2 base address
                     if val != 0x1f802000 {
-                        panic!("Bad expansion 2 base address: 0x {:08x}", val)
+                        panic!("Bad expansion 2 base address: 0x{:08x}", val)
                     }
                 }
                 _ => warn!("Unhandled write to MEMCONTROL register")
@@ -48,18 +48,18 @@ impl Interconnect {
             return;
         }
 
-        panic!("unhandled store32 into address {:08x}", addr)
+        panic!("unhandled store32 into address 0x{:08x}", addr)
     }
 
     pub fn load32(&self, addr: u32) -> u32 {
         if addr % 4 != 0 {
-            panic!("Unaligned load32 address {:08x}", addr)
+            panic!("Unaligned load32 address 0x{:08x}", addr)
         }
 
         if let Some(offset) = map::BIOS.contains(addr) {
             return self.bios.load32(offset);
         }
-        panic!("unhandled fetch32 at address {:08x}", addr);
+        panic!("unhandled fetch32 at address 0x{:08x}", addr);
     }
 }
 

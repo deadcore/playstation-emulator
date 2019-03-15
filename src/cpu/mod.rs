@@ -3,23 +3,8 @@ extern crate env_logger;
 
 pub mod interconnect;
 
-use crate::instruction::{Instruction, RegisterIndex};
+use crate::instruction::{Instruction, RegisterIndex, REGISTERS};
 use self::interconnect::Interconnect;
-
-pub const REGISTERS: [&str; 32] = [
-    "$zero",
-    "$at",
-    "$v0", "$v1",
-    "$a0", "$a1", "$a2", "$a3",
-    "$t0", "$t1", "$t2", "$t3", "$t4", "$t5", "$t6", "$t7",
-    "$s0", "$s1", "$s2", "$s3", "$s4", "$s5", "$s6", "$s7",
-    "$t8", "$t9",
-    "$k0", "$k1",
-    "$gp",
-    "$sp",
-    "$fp",
-    "$ra"
-];
 
 /// CPU state
 pub struct Cpu {
@@ -36,6 +21,8 @@ pub struct Cpu {
     /// Next instruction to be executed , used to simulate the branch delay slot
     next_instruction: Instruction,
 
+    /// Cop0 register 12: Status Register
+    sr: u32,
 }
 
 
@@ -50,6 +37,7 @@ impl Cpu {
             regs,
             inter,
             next_instruction: Instruction(0x0),
+            sr: 0,
         }
     }
 
@@ -106,12 +94,34 @@ impl Cpu {
             0b101011 => self.op_sw(instruction),
             0b001001 => self.op_aaddiu(instruction),
             0b000010 => self.op_j(instruction),
-
+            0b010000 => self.op_cop0(instruction),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
 
     // Operations
+
+    fn op_mtc0(&mut self, instruction: Instruction) {
+        let cpu_r = instruction.t();
+        let RegisterIndex(cop_r) = instruction.d();
+
+        let v = self.reg(cpu_r);
+
+        debug!("MTC0 {}, cop0_{}", cpu_r.name(), cop_r);
+
+        match cop_r {
+            12 => self.sr = v,
+            n => panic!("Unhandled cop0 register: {:08x}", n)
+        }
+    }
+
+    /// Coprocessor 0 opcode
+    fn op_cop0(&mut self, instruction: Instruction) {
+        match instruction.cop_opcode() {
+            0b000100 => self.op_mtc0(instruction),
+            _ => panic!("unhandled cop0 instruction [{:#08b}]", instruction.cop_opcode())
+        }
+    }
 
     /// Jump
     fn op_j(&mut self, instruction: Instruction) {
@@ -130,7 +140,7 @@ impl Cpu {
 
         let v = self.reg(s).wrapping_add(i);
 
-        debug!("ADDIU {}, {}, 0x{:04x}", REGISTERS[t.to_usize()], REGISTERS[s.to_usize()], i);
+        debug!("ADDIU {}, {}, 0x{:04x}", t.name(), s.name(), i);
 
         self.set_reg(t, v)
     }
@@ -143,7 +153,7 @@ impl Cpu {
 
         let v = self.reg(t) << i;
 
-        debug!("SLL {}, {}, {}", REGISTERS[d.to_usize()], REGISTERS[t.to_usize()], i);
+        debug!("SLL {}, {}, {}", d.name(), t.name(), i);
 
         self.set_reg(d, v)
     }
@@ -155,7 +165,7 @@ impl Cpu {
 
         let v = i << 16;
 
-        debug!("LUI {}, 0x{:04x}", REGISTERS[t.to_usize()], i);
+        debug!("LUI {}, 0x{:04x}", t.name(), i);
 
         self.set_reg(t, v);
     }
@@ -168,7 +178,7 @@ impl Cpu {
 
         let v = self.reg(s) | self.reg(t);
 
-        debug!("OR {}, {}, {}", REGISTERS[d.to_usize()], REGISTERS[s.to_usize()], REGISTERS[t.to_usize()]);
+        debug!("OR {}, {}, {}", d.name(), s.name(), t.name());
 
         self.set_reg(d, v);
     }
@@ -180,13 +190,19 @@ impl Cpu {
         let s = instruction.s();
         let v = self.reg(s) | i;
 
-        debug!("ORI {}, {}, 0x{:04x}", REGISTERS[t.to_usize()], REGISTERS[s.to_usize()], i);
+        debug!("ORI {}, {}, 0x{:04x}", t.name(), s.name(), i);
 
         self.set_reg(t, v);
     }
 
     /// Store word
     fn op_sw(&mut self, instruction: Instruction) {
+        if self.sr & 0x10000 != 0 {
+            // Cache is isolated , ignore write
+            warn!("ignoring store while cache is isolated");
+            return;
+        }
+
         let i = instruction.imm_se();
         let t = instruction.t();
         let s = instruction.s();
@@ -194,7 +210,7 @@ impl Cpu {
         let addr = self.reg(s).wrapping_add(i);
         let v = self.reg(t);
 
-        debug!("SW {}, 0x{:04x}({})", REGISTERS[t.to_usize()], i, REGISTERS[s.to_usize()]);
+        debug!("SW {}, 0x{:04x}({})", t.name(), i, s.name());
 
         self.store32(addr, v)
     }
