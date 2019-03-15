@@ -1,5 +1,6 @@
 #[macro_use]
 extern crate log;
+extern crate env_logger;
 
 use std::fs::File;
 use std::io::Read;
@@ -8,6 +9,7 @@ use std::io::{Result, Error, ErrorKind};
 use std::env;
 
 fn main() {
+    env_logger::init();
 
     let bios_filepath = match env::args().nth(1) {
         Some(x) => x,
@@ -81,15 +83,23 @@ impl Cpu {
         self.inter.load32(addr)
     }
 
+    fn store32(&mut self, addr: u32, val: u32) {
+        self.inter.store32(addr, val);
+    }
+
     fn decode_and_execute(&mut self, instruction: Instruction) {
         match instruction.function() {
             0b001111 => self.op_lui(instruction),
-            _ => panic!("Unhandled instruction {:08x}", instruction.0)
+            0b001101 => self.op_ori(instruction),
+            0b101011 => self.op_sw(instruction),
+            _ => {
+                error!("[0x{:08x}] - Function: {:08x}", instruction.0, instruction.function());
+                panic!("Unhandled instruction {:08x}", instruction.0);
+            }
         }
     }
 
     fn op_lui(&mut self, instruction: Instruction) {
-        debug!("[{:08x}]", instruction.function());
         let i = instruction.imm();
         let t = instruction.t();
 
@@ -98,6 +108,25 @@ impl Cpu {
         self.set_reg(t, v);
     }
 
+    fn op_ori(&mut self, instruction: Instruction) {
+        let i = instruction.imm();
+        let t = instruction.t();
+        let s = instruction.s();
+        let v = self.reg(s) | i;
+        self.set_reg(t, v);
+    }
+
+    /// Store word
+    fn op_sw(&mut self, instruction: Instruction) {
+        let i = instruction.imm_se();
+        let t = instruction.t();
+        let s = instruction.s();
+
+        let addr = self.reg(s).wrapping_add(i);
+        let v = self.reg(t);
+
+        self.store32(addr, v)
+    }
 }
 
 /// BIOS image
@@ -149,7 +178,37 @@ impl Interconnect {
         }
     }
 
+    pub fn store32(&mut self, addr: u32, val: u32) {
+        if addr % 4 != 0 {
+            panic!("Unaligned store32 address {:08x}", addr)
+        }
+
+        if let Some(offset) = map::MEMCONTROL.contains(addr) {
+            match offset {
+                0 => { // Expansion 1 base address
+                    if val != 0x1f000000 {
+                        panic!("Bad expansion 1 base address: 0x {:08x}", val)
+                    }
+                }
+
+                4 => { // Expansion 2 base address
+                    if val != 0x1f802000 {
+                        panic!("Bad expansion 2 base address: 0x {:08x}", val)
+                    }
+                }
+                _ => info!("Unhandled write to MEMCONTROL register")
+            }
+        }
+
+        panic!("unhandled store32 into address {:08x}", addr)
+    }
+
     pub fn load32(&self, addr: u32) -> u32 {
+
+        if addr % 4 != 0 {
+            panic!("Unaligned load32 address {:08x}", addr)
+        }
+
         if let Some(offset) = map::BIOS.contains(addr) {
             return self.bios.load32(offset);
         }
@@ -172,6 +231,8 @@ mod map {
         }
     }
 
+    pub const MEMCONTROL: Range = Range(0x1f801000, 36);
+
     pub const BIOS: Range = Range(0xbfc00000, 512 * 1024);
 }
 
@@ -186,6 +247,13 @@ impl Instruction {
         op >> 26
     }
 
+    /// Return register index in bits [25:21]
+    fn s(self) -> u32 {
+        let Instruction(op) = self;
+
+        (op >> 21) & 0x1f
+    }
+
     /// Return register index in bits [20:16]
     fn t(self) -> u32 {
         let Instruction(op) = self;
@@ -196,5 +264,14 @@ impl Instruction {
     fn imm(self) -> u32 {
         let Instruction(op) = self;
         op & 0xffff
+    }
+
+    /// Return immediate value in bits [16:0] as a sign−extended 32 bit value
+    fn imm_se(self) -> u32 {
+        let Instruction(op) = self;
+
+        let v = (op & oxffff) as i16;
+
+        v as u32
     }
 }
