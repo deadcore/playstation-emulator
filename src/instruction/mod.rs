@@ -54,4 +54,9 @@ impl Instruction {
         let Instruction(op) = self;
         (op >> 6) & 0x1f
     }
+
+    pub fn imm_jump(self) -> u32 {
+        let Instruction(op) = self;
+        op & 0x3ffffff
+    }
 }

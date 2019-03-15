@@ -36,6 +36,12 @@ impl Interconnect {
             return;
         }
 
+        if let Some(_) = map::RAMSIZE.contains(addr) {
+            // We ignore writes at this address
+            warn!("Ignore writes to RAMSIZE");
+            return ;
+        }
+
         panic!("unhandled store32 into address {:08x}", addr)
     }
 
@@ -66,7 +72,9 @@ mod map {
         }
     }
 
+    /// Register that has something to do with RAM configuration
+    /// configured by the BIOS
+    pub const RAMSIZE: Range = Range(0x1f801060, 4);
     pub const MEMCONTROL: Range = Range(0x1f801000, 36);
-
     pub const BIOS: Range = Range(0xbfc00000, 512 * 1024);
 }
