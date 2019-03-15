@@ -4,7 +4,7 @@ extern crate env_logger;
 pub mod interconnect;
 
 use crate::instruction::Instruction;
-use self::interconnect::{Interconnect};
+use self::interconnect::Interconnect;
 
 pub const REGISTERS: [&str; 32] = [
     "$zero",
@@ -82,14 +82,27 @@ impl Cpu {
 
     fn decode_and_execute(&mut self, instruction: Instruction) {
         match instruction.function() {
+            0b000000 => match instruction.subfunction() {
+                0b000000 => self.op_sll(instruction),
+                _ => panic!("Unhandled instruction {:08x}", instruction.0),
+            },
             0b001111 => self.op_lui(instruction),
             0b001101 => self.op_ori(instruction),
             0b101011 => self.op_sw(instruction),
-            _ => {
-                error!("[0x{:08x}] - Function: {:08x}", instruction.0, instruction.function());
-                panic!("Unhandled instruction {:08x}", instruction.0);
-            }
+            _ => panic!("Unhandled instruction 0x{:08x}", instruction.0)
         }
+    }
+
+    fn op_sll(&mut self, instruction: Instruction) {
+        debug!("LUI {}, 0x{:04x}", REGISTERS[instruction.t() as usize], instruction.shift());
+
+        let i = instruction.shift();
+        let t = instruction.t();
+        let d = instruction.d();
+
+        let v = self.reg(t) << i;
+
+        self.set_reg(d, v)
     }
 
     fn op_lui(&mut self, instruction: Instruction) {

@@ -36,4 +36,22 @@ impl Instruction {
 
         v as u32
     }
+
+    /// Return register index in bits [15:11]
+    pub fn d(self) -> u32 {
+        let Instruction(op) = self;
+        (op >> 11) & 0x1f
+    }
+
+    /// Returns bits [5:0] of the instruction
+    pub fn subfunction(self) -> u32 {
+        let Instruction(op) = self;
+        op & 0x3f
+    }
+
+    /// Shift Immediate values are stored in bits [10:6]
+    pub fn shift(self) -> u32 {
+        let Instruction(op) = self;
+        (op >> 6) & 0x1f
+    }
 }

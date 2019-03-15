@@ -31,8 +31,9 @@ impl Interconnect {
                         panic!("Bad expansion 2 base address: 0x {:08x}", val)
                     }
                 }
-                _ => info!("Unhandled write to MEMCONTROL register")
+                _ => warn!("Unhandled write to MEMCONTROL register")
             }
+            return;
         }
 
         panic!("unhandled store32 into address {:08x}", addr)
