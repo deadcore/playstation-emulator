@@ -2,6 +2,16 @@
 #[derive(Clone, Copy)]
 pub struct Instruction(pub u32);
 
+#[derive(Clone, Copy)]
+pub struct RegisterIndex(pub u32);
+
+impl RegisterIndex {
+    pub fn to_usize(self) -> usize {
+        self.0 as usize
+    }
+}
+
+
 impl Instruction {
     /// Return bits [31:26] of the instruction
     pub fn function(self) -> u32 {
@@ -10,16 +20,17 @@ impl Instruction {
     }
 
     /// Return register index in bits [25:21]
-    pub fn s(self) -> u32 {
+    pub fn s(self) -> RegisterIndex {
         let Instruction(op) = self;
 
-        (op >> 21) & 0x1f
+        RegisterIndex((op >> 21) & 0x1f)
     }
 
     /// Return register index in bits [20:16]
-    pub fn t(self) -> u32 {
+    pub fn t(self) -> RegisterIndex {
         let Instruction(op) = self;
-        (op >> 16) & 0x1f
+
+        RegisterIndex((op >> 16) & 0x1f)
     }
 
     /// Return immediate value in bits [16:0]
@@ -38,9 +49,10 @@ impl Instruction {
     }
 
     /// Return register index in bits [15:11]
-    pub fn d(self) -> u32 {
+    pub fn d(self) -> RegisterIndex {
         let Instruction(op) = self;
-        (op >> 11) & 0x1f
+
+        RegisterIndex((op >> 11) & 0x1f)
     }
 
     /// Returns bits [5:0] of the instruction

@@ -38,8 +38,14 @@ impl Interconnect {
 
         if let Some(_) = map::RAMSIZE.contains(addr) {
             // We ignore writes at this address
-            warn!("Ignore writes to RAMSIZE");
-            return ;
+            warn!("Unhandled write to RAMSIZE register");
+            return;
+        }
+
+        if let Some(_) = map::CACHECONTROL.contains(addr) {
+            // We ignore writes at this address
+            warn!("Unhandled write to CACHECONTROL register");
+            return;
         }
 
         panic!("unhandled store32 into address {:08x}", addr)
@@ -71,6 +77,9 @@ mod map {
             }
         }
     }
+
+    /// Cache control register
+    pub const CACHECONTROL: Range = Range(0xfffe0130, 4);
 
     /// Register that has something to do with RAM configuration
     /// configured by the BIOS

@@ -3,7 +3,7 @@ extern crate env_logger;
 
 pub mod interconnect;
 
-use crate::instruction::Instruction;
+use crate::instruction::{Instruction, RegisterIndex};
 use self::interconnect::Interconnect;
 
 pub const REGISTERS: [&str; 32] = [
@@ -53,12 +53,12 @@ impl Cpu {
         }
     }
 
-    fn reg(&self, index: u32) -> u32 {
-        self.regs[index as usize]
+    fn reg(&self, index: RegisterIndex) -> u32 {
+        self.regs[index.to_usize()]
     }
 
-    fn set_reg(&mut self, index: u32, val: u32) {
-        self.regs[index as usize] = val;
+    fn set_reg(&mut self, index: RegisterIndex, val: u32) {
+        self.regs[index.to_usize()] = val;
         // Make sure R0 is always 0
         self.regs[0] = 0;
     }
@@ -130,7 +130,7 @@ impl Cpu {
 
         let v = self.reg(s).wrapping_add(i);
 
-        debug!("ADDIU {}, {}, 0x{:04x}", REGISTERS[t as usize], REGISTERS[s as usize], i);
+        debug!("ADDIU {}, {}, 0x{:04x}", REGISTERS[t.to_usize()], REGISTERS[s.to_usize()], i);
 
         self.set_reg(t, v)
     }
@@ -143,7 +143,7 @@ impl Cpu {
 
         let v = self.reg(t) << i;
 
-        debug!("SLL {}, {}, {}", REGISTERS[d as usize], REGISTERS[t as usize], i);
+        debug!("SLL {}, {}, {}", REGISTERS[d.to_usize()], REGISTERS[t.to_usize()], i);
 
         self.set_reg(d, v)
     }
@@ -155,11 +155,12 @@ impl Cpu {
 
         let v = i << 16;
 
-        debug!("LUI {}, 0x{:04x}", REGISTERS[t as usize], i);
+        debug!("LUI {}, 0x{:04x}", REGISTERS[t.to_usize()], i);
 
         self.set_reg(t, v);
     }
 
+    /// Bitwise Or
     fn op_or(&mut self, instruction: Instruction) {
         let d = instruction.d();
         let s = instruction.s();
@@ -167,7 +168,7 @@ impl Cpu {
 
         let v = self.reg(s) | self.reg(t);
 
-        debug!("OR {}, {}, {}", REGISTERS[d as usize], REGISTERS[s as usize], REGISTERS[t as usize]);
+        debug!("OR {}, {}, {}", REGISTERS[d.to_usize()], REGISTERS[s.to_usize()], REGISTERS[t.to_usize()]);
 
         self.set_reg(d, v);
     }
@@ -179,7 +180,7 @@ impl Cpu {
         let s = instruction.s();
         let v = self.reg(s) | i;
 
-        debug!("ORI {}, {}, 0x{:04x}", REGISTERS[t as usize], REGISTERS[s as usize], i);
+        debug!("ORI {}, {}, 0x{:04x}", REGISTERS[t.to_usize()], REGISTERS[s.to_usize()], i);
 
         self.set_reg(t, v);
     }
@@ -193,7 +194,7 @@ impl Cpu {
         let addr = self.reg(s).wrapping_add(i);
         let v = self.reg(t);
 
-        debug!("SW {}, 0x{:04x}({})", REGISTERS[t as usize], i, REGISTERS[s as usize]);
+        debug!("SW {}, 0x{:04x}({})", REGISTERS[t.to_usize()], i, REGISTERS[s.to_usize()]);
 
         self.store32(addr, v)
     }
