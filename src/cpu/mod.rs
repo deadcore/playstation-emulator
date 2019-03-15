@@ -98,13 +98,15 @@ impl Cpu {
         match instruction.function() {
             0b000000 => match instruction.subfunction() {
                 0b000000 => self.op_sll(instruction),
-                _ => panic!("Unhandled instruction {:08x}", instruction.0),
+                0b100101 => self.op_or(instruction),
+                _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.subfunction())
             },
             0b001111 => self.op_lui(instruction),
             0b001101 => self.op_ori(instruction),
             0b101011 => self.op_sw(instruction),
             0b001001 => self.op_aaddiu(instruction),
             0b000010 => self.op_j(instruction),
+
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
@@ -120,6 +122,7 @@ impl Cpu {
         self.pc = (self.pc & 0xf0000000) | (i << 2);
     }
 
+    /// Add Immediate Unsigned
     fn op_aaddiu(&mut self, instruction: Instruction) {
         let i = instruction.shift();
         let t = instruction.t();
@@ -132,6 +135,7 @@ impl Cpu {
         self.set_reg(t, v)
     }
 
+    /// Shift Left Logical
     fn op_sll(&mut self, instruction: Instruction) {
         let i = instruction.shift();
         let t = instruction.t();
@@ -156,6 +160,19 @@ impl Cpu {
         self.set_reg(t, v);
     }
 
+    fn op_or(&mut self, instruction: Instruction) {
+        let d = instruction.d();
+        let s = instruction.s();
+        let t = instruction.t();
+
+        let v = self.reg(s) | self.reg(t);
+
+        debug!("OR {}, {}, {}", REGISTERS[d as usize], REGISTERS[s as usize], REGISTERS[t as usize]);
+
+        self.set_reg(d, v);
+    }
+
+    /// Bitwise Or Immediate
     fn op_ori(&mut self, instruction: Instruction) {
         let i = instruction.imm();
         let t = instruction.t();
