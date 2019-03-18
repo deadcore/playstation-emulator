@@ -1,7 +1,11 @@
 #[macro_use]
 extern crate log;
-extern crate env_logger;
+
+#[macro_use]
+extern crate prettytable;
+
 
 pub mod instruction;
 pub mod cpu;
 pub mod bios;
+pub mod debugger;
