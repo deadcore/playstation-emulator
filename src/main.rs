@@ -8,6 +8,7 @@ use rust_playstation_emulator::cpu::interconnect::Interconnect;
 use rust_playstation_emulator::bios::Bios;
 
 use rust_playstation_emulator::debugger::Debugger;
+use rust_playstation_emulator::ram::Ram;
 
 fn main() {
     env_logger::init();
@@ -20,7 +21,11 @@ fn main() {
     };
 
     let bios = Bios::new(&Path::new(&bios_filepath)).unwrap();
-    let inter = Interconnect::new(bios);
+    let ram = Ram::new();
+    let inter = Interconnect::new(
+        bios,
+        ram
+    );
     let mut cpu = Cpu::new(inter);
 
     loop {

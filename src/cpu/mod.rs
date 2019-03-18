@@ -165,8 +165,10 @@ impl Cpu {
         debug!("LW {}, 0x{:04x}({})", t.name(), i, s.name());
 
         let addr = self.reg(s).wrapping_add(i);
+
         let v = self.load32(addr);
-        self.set_reg(t, v);
+
+        self.load = (t, v);
     }
 
     /// Add Immediate Unsigned and check for overflow
