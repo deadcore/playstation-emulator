@@ -129,6 +129,7 @@ impl Cpu {
             0b010000 => self.op_cop0(instruction),
             0b000101 => self.op_bne(instruction),
             0b001000 => self.op_addi(instruction),
+            0b100011 => self.op_lw(instruction),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
@@ -151,14 +152,17 @@ impl Cpu {
     // Operations
 
     fn op_lw(&mut self, instruction: Instruction) {
-//        if self.sr & 0x10000 != 0 { // Cache is isolated , ignore write
-//            println!("Ignoring load while cache is isolated");
-//            return;
-//        }
+
+        if self.sr & 0x10000 != 0 { // Cache is isolated , ignore write
+            println!("Ignoring load while cache is isolated");
+            return;
+        }
 
         let i = instruction.imm_se();
         let t = instruction.t();
         let s = instruction.s();
+
+        debug!("LW {}, 0x{:04x}({})", t.name(), i, s.name());
 
         let addr = self.reg(s).wrapping_add(i);
         let v = self.load32(addr);
