@@ -1,3 +1,5 @@
+use std::fmt::*;
+
 /// Simple wrapper around an instruction word to provide type-safety.
 #[derive(Clone, Copy)]
 pub struct Instruction(pub u32);
@@ -30,6 +32,12 @@ impl RegisterIndex {
     }
 }
 
+
+impl Display for RegisterIndex {
+    fn fmt(&self, f: &mut Formatter) -> Result {
+        write!(f, "{}", self.name())
+    }
+}
 
 impl Instruction {
     /// Return bits [31:26] of the instruction

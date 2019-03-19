@@ -32,4 +32,12 @@ impl Operation for Addi {
 
         registers.set_reg(t, v);
     }
+
+    fn gnu(&self) -> String {
+        let i = self.instruction.imm_se() as i32;
+        let t = self.instruction.t();
+        let s = self.instruction.s();
+
+        format!("ADDI {}, {}, 0x{:04x}", t, s, i)
+    }
 }

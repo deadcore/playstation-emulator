@@ -39,4 +39,12 @@ impl Operation for Lw {
 
         load.set(t, v);
     }
+
+    fn gnu(&self) -> String {
+        let t = self.instruction.t();
+        let s = self.instruction.s();
+        let i = self.instruction.imm_se();
+
+        format!("LW {}, 0x{:04x}({})", t, i, s)
+    }
 }

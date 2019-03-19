@@ -23,4 +23,8 @@ impl Operation for J {
 
         registers.set_pc((registers.pc() & 0xf0000000) | (i << 2));
     }
+
+    fn gnu(&self) -> String {
+        format!("J")
+    }
 }

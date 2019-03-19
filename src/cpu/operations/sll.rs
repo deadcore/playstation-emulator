@@ -27,4 +27,12 @@ impl Operation for Sll {
 
         registers.set_reg(d, v)
     }
+
+    fn gnu(&self) -> String {
+        let i = self.instruction.shift();
+        let t = self.instruction.t();
+        let d = self.instruction.d();
+
+        format!("SLL {}, {}, {}", d, t, i)
+    }
 }

@@ -100,6 +100,7 @@ impl Cpu {
     }
 
     fn execute_operation(&mut self, op: impl Operation) {
+        debug!("[0x{:08x}] {}", self.registers.pc(), op.gnu());
         op.perform(&mut self.registers, &mut self.interconnect, &mut self.load)
     }
 

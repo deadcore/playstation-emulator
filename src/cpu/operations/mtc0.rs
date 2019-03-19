@@ -37,4 +37,11 @@ impl Operation for Mtc0 {
             _ => panic!("Unhandled cop0 register {}", cop_r),
         }
     }
+
+    fn gnu(&self) -> String {
+        let cpu_r = self.instruction.t();
+        let cop_r = self.instruction.d().0;
+
+        format!("MTC0 {}, cop0r{}", cpu_r, cop_r)
+    }
 }

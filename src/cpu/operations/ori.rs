@@ -26,4 +26,12 @@ impl Operation for Ori {
 
         registers.set_reg(t, v);
     }
+
+    fn gnu(&self) -> String {
+        let i = self.instruction.imm();
+        let t = self.instruction.t();
+        let s = self.instruction.s();
+
+        format!("ORI {}, {}, 0x{:04x}", t, s, i)
+    }
 }

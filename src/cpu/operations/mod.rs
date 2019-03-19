@@ -17,4 +17,6 @@ pub mod sltu;
 
 pub trait Operation {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay);
+
+    fn gnu(&self) -> String;
 }

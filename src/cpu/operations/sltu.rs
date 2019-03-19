@@ -34,4 +34,12 @@ impl Operation for Sltu {
 
         registers.set_reg(d, v as u32)
     }
+
+    fn gnu(&self) -> String {
+        let d = self.instruction.d();
+        let s = self.instruction.s();
+        let t = self.instruction.t();
+
+        format!("SLTU {}, {}, {}", d, s, t)
+    }
 }

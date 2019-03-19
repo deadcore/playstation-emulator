@@ -34,4 +34,12 @@ impl Operation for Sw {
 
         interconnect.store32(addr, v)
     }
+
+    fn gnu(&self) -> String {
+        let i = self.instruction.imm_se();
+        let t = self.instruction.t();
+        let s = self.instruction.s();
+
+        format!("SW {}, 0x{:04x}({})", t, i, s)
+    }
 }

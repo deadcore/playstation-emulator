@@ -27,4 +27,12 @@ impl Operation for Addiu {
 
         registers.set_reg(t, v)
     }
+
+    fn gnu(&self) -> String {
+        let i = self.instruction.imm_se();
+        let t = self.instruction.t();
+        let s = self.instruction.s();
+
+        format!("ADDIU {}, {}, 0x{:04x}", t, s, i)
+    }
 }

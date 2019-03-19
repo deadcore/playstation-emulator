@@ -26,4 +26,11 @@ impl Operation for Lui {
 
         registers.set_reg(t, v);
     }
+
+    fn gnu(&self) -> String {
+        let i = self.instruction.imm();
+        let t = self.instruction.t();
+
+        format!("LUI {}, 0x{:04x}", t, i)
+    }
 }

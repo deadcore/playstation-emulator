@@ -27,4 +27,12 @@ impl Operation for Or {
 
         registers.set_reg(d, v);
     }
+
+    fn gnu(&self) -> String {
+        let d = self.instruction.d();
+        let s = self.instruction.s();
+        let t = self.instruction.t();
+
+        format!("OR {}, {}, {}", d, s, t)
+    }
 }

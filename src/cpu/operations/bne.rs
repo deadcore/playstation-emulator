@@ -27,4 +27,12 @@ impl Operation for Bne {
             registers.branch(i);
         }
     }
+
+    fn gnu(&self) -> String {
+        let s = self.instruction.s();
+        let t = self.instruction.t();
+        let i = self.instruction.imm_se();
+
+        format!("BNE {}, {}, 0x{:04x}", s, t, i)
+    }
 }
