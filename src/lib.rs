@@ -2,8 +2,7 @@
 extern crate log;
 
 #[macro_use]
-extern crate prettytable;
-
+mod box_array;
 
 pub mod instruction;
 pub mod cpu;

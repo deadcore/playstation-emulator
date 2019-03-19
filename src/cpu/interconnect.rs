@@ -52,6 +52,11 @@ impl Interconnect {
             return;
         }
 
+        if let Some(_) = map::RAM.contains(addr) {
+            self.ram.store32(addr, val);
+            return;
+        }
+
         panic!("unhandled store32 into address 0x{:08x}", addr)
     }
 

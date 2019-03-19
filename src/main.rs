@@ -1,13 +1,12 @@
-extern crate log;
 extern crate env_logger;
+extern crate log;
 
-use std::path::Path;
 use std::env;
+use std::path::Path;
+
+use rust_playstation_emulator::bios::Bios;
 use rust_playstation_emulator::cpu::Cpu;
 use rust_playstation_emulator::cpu::interconnect::Interconnect;
-use rust_playstation_emulator::bios::Bios;
-
-use rust_playstation_emulator::debugger::Debugger;
 use rust_playstation_emulator::ram::Ram;
 
 fn main() {
