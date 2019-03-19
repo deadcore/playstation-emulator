@@ -4,6 +4,7 @@ extern crate log;
 use crate::cpu::delay::Delay;
 use crate::cpu::operations::addi::Addi;
 use crate::cpu::operations::addiu::*;
+use crate::cpu::operations::addu::Addu;
 use crate::cpu::operations::bne::*;
 use crate::cpu::operations::j::*;
 use crate::cpu::operations::lui::*;
@@ -109,6 +110,7 @@ impl Cpu {
             0b000000 => self.execute_operation(Sll::new(instruction)),
             0b100101 => self.execute_operation(Or::new(instruction)),
             0b101011 => self.execute_operation(Sltu::new(instruction)),
+            0b100001 => self.execute_operation(Addu::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
