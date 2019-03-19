@@ -13,6 +13,7 @@ use crate::cpu::operations::Operation;
 use crate::cpu::operations::or::*;
 use crate::cpu::operations::ori::*;
 use crate::cpu::operations::sll::*;
+use crate::cpu::operations::sltu::Sltu;
 use crate::cpu::operations::sw::*;
 use crate::cpu::registers::Registers;
 use crate::instruction::{Instruction, RegisterIndex};
@@ -106,7 +107,8 @@ impl Cpu {
         match instruction.subfunction() {
             0b000000 => self.execute_operation(Sll::new(instruction)),
             0b100101 => self.execute_operation(Or::new(instruction)),
-            _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.subfunction())
+            0b101011 => self.execute_operation(Sltu::new(instruction)),
+            _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
 

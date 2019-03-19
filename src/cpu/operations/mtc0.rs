@@ -22,8 +22,6 @@ impl Operation for Mtc0 {
         let cpu_r = self.instruction.t();
         let cop_r = self.instruction.d().0;
 
-        debug!("MTC0 {}, cop0_{}", cpu_r.name(), cop_r);
-
         let v = registers.reg(cpu_r);
 
         match cop_r {

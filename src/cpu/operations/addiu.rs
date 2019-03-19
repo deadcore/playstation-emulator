@@ -25,8 +25,6 @@ impl Operation for Addiu {
 
         let v = registers.reg(s).wrapping_add(i);
 
-        debug!("ADDIU {}, {}, 0x{:04x}", t.name(), s.name(), i);
-
         registers.set_reg(t, v)
     }
 }
