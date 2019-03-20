@@ -6,6 +6,7 @@ use crate::cpu::operations::addi::Addi;
 use crate::cpu::operations::addiu::*;
 use crate::cpu::operations::addu::Addu;
 use crate::cpu::operations::andi::Andi;
+use crate::cpu::operations::beq::Beq;
 use crate::cpu::operations::bne::*;
 use crate::cpu::operations::j::*;
 use crate::cpu::operations::jal::Jal;
@@ -108,6 +109,7 @@ impl Cpu {
             0b001100 => self.execute_operation(Andi::new(instruction)),
             0b101000 => self.execute_operation(Sb::new(instruction)),
             0b100000 => self.execute_operation(Lb::new(instruction)),
+            0b000100 => self.execute_operation(Beq::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }

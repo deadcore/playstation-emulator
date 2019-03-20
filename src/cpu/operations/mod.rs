@@ -21,6 +21,7 @@ pub mod andi;
 pub mod sb;
 pub mod jr;
 pub mod lb;
+pub mod beq;
 
 pub trait Operation {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay);
