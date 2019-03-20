@@ -5,8 +5,10 @@ use crate::cpu::delay::Delay;
 use crate::cpu::operations::addi::Addi;
 use crate::cpu::operations::addiu::*;
 use crate::cpu::operations::addu::Addu;
+use crate::cpu::operations::andi::Andi;
 use crate::cpu::operations::bne::*;
 use crate::cpu::operations::j::*;
+use crate::cpu::operations::jal::Jal;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
 use crate::cpu::operations::mtc0::*;
@@ -99,12 +101,15 @@ impl Cpu {
             0b001000 => self.execute_operation(Addi::new(instruction)),
             0b100011 => self.execute_operation(Lw::new(instruction)),
             0b101001 => self.execute_operation(Sh::new(instruction)),
+            0b000011 => self.execute_operation(Jal::new(instruction)),
+            0b001100 => self.execute_operation(Andi::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
 
     fn execute_operation(&mut self, op: impl Operation) {
         debug!("[0x{:08x}] {}", self.registers.pc(), op.gnu());
+
         op.perform(&mut self.registers, &mut self.interconnect, &mut self.load)
     }
 
