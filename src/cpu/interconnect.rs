@@ -17,6 +17,16 @@ impl Interconnect {
         }
     }
 
+    /// Store 16bit value into the memory
+    pub fn store16(&mut self, addr: u32, _: u16) {
+        if addr % 4 != 0 {
+            panic!("Unaligned store16 address {:08x}", addr)
+        }
+
+        panic!("unhandled store16 into address {:08x}", addr);
+    }
+
+    /// Store 32bit value into the memory
     pub fn store32(&mut self, addr: u32, val: u32) {
         if addr % 4 != 0 {
             panic!("Unaligned store32 address {:08x}", addr)
@@ -119,7 +129,7 @@ mod map {
     pub const BIOS: Range = Range(0x1fc00000, 512 * 1024);
 
     /// Unknown registers . The name comes from mednafen.
-    pub const SYS_CONTROL: Range = Range(0x1f801000, 36);
+//    pub const SYS_CONTROL: Range = Range(0x1f801000, 36);
 
     /// Register that has something to do with RAM configuration
     /// configured by the BIOS
