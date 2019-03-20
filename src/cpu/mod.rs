@@ -5,6 +5,7 @@ use crate::cpu::delay::Delay;
 use crate::cpu::operations::addi::Addi;
 use crate::cpu::operations::addiu::*;
 use crate::cpu::operations::addu::Addu;
+use crate::cpu::operations::and::And;
 use crate::cpu::operations::andi::Andi;
 use crate::cpu::operations::beq::Beq;
 use crate::cpu::operations::bne::*;
@@ -128,6 +129,7 @@ impl Cpu {
             0b101011 => self.execute_operation(Sltu::new(instruction)),
             0b100001 => self.execute_operation(Addu::new(instruction)),
             0b001000 => self.execute_operation(Jr::new(instruction)),
+            0b100100 => self.execute_operation(And::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
