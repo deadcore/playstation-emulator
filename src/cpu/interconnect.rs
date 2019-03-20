@@ -18,6 +18,18 @@ impl Interconnect {
     }
 
     /// Store 16bit value into the memory
+    pub fn store8(&mut self, addr: u32, val: u8) {
+        let abs_addr = map::mask_region(addr);
+
+        if let Some(offset) = map::EXPANSION2.contains(abs_addr) {
+            warn!("Unhandled write to expansion 2 register {:x}", offset);
+            return;
+        }
+
+        panic!("unhandled store8 into address {:08x}", addr);
+    }
+
+    /// Store 16bit value into the memory
     pub fn store16(&mut self, addr: u32, val: u16) {
         if addr % 2 != 0 {
             panic!("Unaligned store16 address {:08x}", addr)
@@ -132,6 +144,8 @@ mod map {
     /// Memory latency and expansion mapping
     pub const MEMCONTROL: Range = Range(0x1f801000, 36);
 
+    /// Expansion region 2
+    pub const EXPANSION2: Range = Range(0x1f802000, 66);
 
     const REGION_MASK: [u32; 8] = [
         // KUSEG: 2048MB
