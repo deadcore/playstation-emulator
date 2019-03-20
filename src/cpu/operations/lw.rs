@@ -25,7 +25,7 @@ impl Operation for Lw {
     /// Load word
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) {
         if registers.sr() & 0x10000 != 0 { // Cache is isolated , ignore write
-            println!("Ignoring load while cache is isolated");
+            warn!("Ignoring load while cache is isolated");
             return;
         }
 

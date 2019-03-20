@@ -18,9 +18,16 @@ impl Interconnect {
     }
 
     /// Store 16bit value into the memory
-    pub fn store16(&mut self, addr: u32, _: u16) {
-        if addr % 4 != 0 {
+    pub fn store16(&mut self, addr: u32, val: u16) {
+        if addr % 2 != 0 {
             panic!("Unaligned store16 address {:08x}", addr)
+        }
+
+        let abs_addr = map::mask_region(addr);
+
+        if let Some(offset) = map::SPU.contains(abs_addr) {
+            warn!("Unhandled write to SPU register {:x}", offset);
+            return;
         }
 
         panic!("unhandled store16 into address {:08x}", addr);
@@ -32,7 +39,7 @@ impl Interconnect {
             panic!("Unaligned store32 address {:08x}", addr)
         }
 
-        let abs_addr = mask_region(addr);
+        let abs_addr = map::mask_region(addr);
 
         if let Some(offset) = map::MEMCONTROL.contains(abs_addr) {
             match offset {
@@ -77,7 +84,7 @@ impl Interconnect {
             panic!("Unaligned load32 address 0x{:08x}", addr)
         }
 
-        let abs_addr = mask_region(addr);
+        let abs_addr = map::mask_region(addr);
 
         if let Some(offset) = map::BIOS.contains(abs_addr) {
             return self.bios.load32(offset);
@@ -90,25 +97,6 @@ impl Interconnect {
         panic!("unhandled fetch32 at address 0x{:08x}", abs_addr);
     }
 }
-
-const REGION_MASK: [u32; 8] = [
-    // KUSEG: 2048MB
-    0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
-    // KSEG0: 512MB
-    0x7fffffff,
-    // KSEG1: 512MB
-    0x1fffffff,
-    // KSEG2: 1024MB
-    0xffffffff, 0xffffffff,
-];
-
-/// Mask a CPU address to remove the region bits .
-pub fn mask_region(addr: u32) -> u32 {
-    // Index address space in 512MB chunks
-    let index = (addr >> 29) as usize;
-    addr & REGION_MASK[index]
-}
-
 
 mod map {
     pub struct Range(u32, u32);
@@ -128,6 +116,9 @@ mod map {
     pub const RAM: Range = Range(0x00000000, 2 * 1024 * 1024);
     pub const BIOS: Range = Range(0x1fc00000, 512 * 1024);
 
+    /// SPU (Sound Processing Unit) registers
+    pub const SPU: Range = Range(0x1f801c00, 640);
+
     /// Unknown registers . The name comes from mednafen.
 //    pub const SYS_CONTROL: Range = Range(0x1f801000, 36);
 
@@ -140,4 +131,23 @@ mod map {
 
     /// Memory latency and expansion mapping
     pub const MEMCONTROL: Range = Range(0x1f801000, 36);
+
+
+    const REGION_MASK: [u32; 8] = [
+        // KUSEG: 2048MB
+        0xffffffff, 0xffffffff, 0xffffffff, 0xffffffff,
+        // KSEG0: 512MB
+        0x7fffffff,
+        // KSEG1: 512MB
+        0x1fffffff,
+        // KSEG2: 1024MB
+        0xffffffff, 0xffffffff,
+    ];
+
+    /// Mask a CPU address to remove the region bits .
+    pub fn mask_region(addr: u32) -> u32 {
+        // Index address space in 512MB chunks
+        let index = (addr >> 29) as usize;
+        addr & REGION_MASK[index]
+    }
 }

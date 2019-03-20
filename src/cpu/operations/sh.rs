@@ -29,7 +29,7 @@ impl Operation for Sh {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) {
         if registers.sr() & 0x10000 != 0 {
             // Cache is isolated , ignore write
-            println!("Ignoring store while cache is isolated");
+            warn!("Ignoring store while cache is isolated");
             return;
         }
 
