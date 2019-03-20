@@ -1,7 +1,7 @@
 use std::fs::File;
+use std::io::{Error, ErrorKind, Result};
 use std::io::Read;
 use std::path::Path;
-use std::io::{Result, Error, ErrorKind};
 
 /// BIOS image
 pub struct Bios {
@@ -36,5 +36,9 @@ impl Bios {
         let b2 = self.data[offset + 2] as u32;
         let b3 = self.data[offset + 3] as u32;
         b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)
+    }
+
+    pub fn load8(&self, offset: u32) -> u8 {
+        self.data[offset as usize]
     }
 }

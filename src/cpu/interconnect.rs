@@ -17,7 +17,7 @@ impl Interconnect {
         }
     }
 
-    /// Store 16bit value into the memory
+    /// Store 8bit value into the memory
     pub fn store8(&mut self, addr: u32, val: u8) {
         let abs_addr = map::mask_region(addr);
 
@@ -89,6 +89,16 @@ impl Interconnect {
         }
 
         panic!("unhandled store32 into address 0x{:08x}", abs_addr)
+    }
+
+    pub fn load8(&self, addr: u32) -> u8 {
+        let abs_addr = map::mask_region(addr);
+
+        if let Some(offset) = map::BIOS.contains(abs_addr) {
+            return self.bios.load8(offset);
+        }
+
+        panic!("unhandled load8 at address {:08x}", addr);
     }
 
     pub fn load32(&self, addr: u32) -> u32 {

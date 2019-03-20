@@ -10,6 +10,7 @@ use crate::cpu::operations::bne::*;
 use crate::cpu::operations::j::*;
 use crate::cpu::operations::jal::Jal;
 use crate::cpu::operations::jr::Jr;
+use crate::cpu::operations::lb::Lb;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
 use crate::cpu::operations::mtc0::*;
@@ -106,6 +107,7 @@ impl Cpu {
             0b000011 => self.execute_operation(Jal::new(instruction)),
             0b001100 => self.execute_operation(Andi::new(instruction)),
             0b101000 => self.execute_operation(Sb::new(instruction)),
+            0b100000 => self.execute_operation(Lb::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
