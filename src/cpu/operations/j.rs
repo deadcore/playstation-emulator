@@ -17,7 +17,6 @@ impl J {
 }
 
 impl Operation for J {
-    /// Load word
     fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
         let i = self.instruction.imm_jump();
 
