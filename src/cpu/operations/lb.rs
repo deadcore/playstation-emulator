@@ -42,6 +42,6 @@ impl Operation for Lb {
         let s = self.instruction.s();
         let i = self.instruction.imm_se();
 
-        format!("LB {}, 0x{:04x}({})", t, i, s)
+        format!("LB {}, 0x{:08x}({})", t, i, s)
     }
 }

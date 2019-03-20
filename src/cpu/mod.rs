@@ -14,6 +14,7 @@ use crate::cpu::operations::jr::Jr;
 use crate::cpu::operations::lb::Lb;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
+use crate::cpu::operations::mfc0::Mfc0;
 use crate::cpu::operations::mtc0::*;
 use crate::cpu::operations::Operation;
 use crate::cpu::operations::or::*;
@@ -135,7 +136,8 @@ impl Cpu {
     fn decode_and_execute_cop0(&mut self, instruction: Instruction) {
         match instruction.cop_opcode() {
             0b000100 => self.execute_operation(Mtc0::new(instruction)),
-            _ => panic!("unhandled cop0 instruction [{:#08b}]", instruction.cop_opcode())
+            0b000000 => self.execute_operation(Mfc0::new(instruction)),
+            _ => panic!("Unhandled cop0 instruction [0x{:08x}]. Cop0 call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
 }

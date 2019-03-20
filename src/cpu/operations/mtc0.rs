@@ -42,6 +42,6 @@ impl Operation for Mtc0 {
         let cpu_r = self.instruction.t();
         let cop_r = self.instruction.d().0;
 
-        format!("MTC0 {}, cop0r{}", cpu_r, cop_r)
+        format!("MTC0 {}, cop0r_{}", cpu_r, cop_r)
     }
 }

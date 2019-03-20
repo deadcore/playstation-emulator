@@ -26,6 +26,10 @@ impl Interconnect {
             return;
         }
 
+        if let Some(offset) = map::RAM.contains(abs_addr) {
+            return self.ram.store8(offset, val);
+        }
+
         panic!("unhandled store8 into address {:08x}", addr);
     }
 
@@ -98,6 +102,15 @@ impl Interconnect {
             return self.bios.load8(offset);
         }
 
+        if let Some(_) = map::EXPANSION1.contains(abs_addr) {
+            // No expansion implemented
+            return 0xff;
+        }
+
+        if let Some(offset) = map::RAM.contains(abs_addr) {
+            return self.ram.load8(offset);
+        }
+
         panic!("unhandled load8 at address {:08x}", addr);
     }
 
@@ -153,6 +166,9 @@ mod map {
 
     /// Memory latency and expansion mapping
     pub const MEMCONTROL: Range = Range(0x1f801000, 36);
+
+    /// Expansion region 1
+    pub const EXPANSION1: Range = Range(0x1f000000, 512 * 1024);
 
     /// Expansion region 2
     pub const EXPANSION2: Range = Range(0x1f802000, 66);

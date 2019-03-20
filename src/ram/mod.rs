@@ -13,6 +13,15 @@ impl Ram {
         }
     }
 
+    pub fn store8(&mut self, offset: u32, val: u8) {
+        self.data[offset as usize] = val
+    }
+
+
+    pub fn load8(&self, offset: u32) -> u8 {
+        self.data[offset as usize]
+    }
+
     /// Fetch the 32bit little endian word at ‘offset ‘
     pub fn load32(&self, offset: u32) -> u32 {
         // The two MSB are ignored, the 2MB RAM is mirorred four times
