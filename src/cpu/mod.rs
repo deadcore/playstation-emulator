@@ -31,6 +31,7 @@ use crate::cpu::operations::sh::Sh;
 use crate::cpu::operations::sll::*;
 use crate::cpu::operations::slti::Slti;
 use crate::cpu::operations::sltu::Sltu;
+use crate::cpu::operations::subu::Subu;
 use crate::cpu::operations::sw::*;
 use crate::cpu::registers::Registers;
 use crate::instruction::{Instruction, RegisterIndex};
@@ -138,6 +139,7 @@ impl Cpu {
             0b100100 => self.execute_operation(And::new(instruction)),
             0b100000 => self.execute_operation(Add::new(instruction)),
             0b001001 => self.execute_operation(Jarl::new(instruction)),
+            0b100011 => self.execute_operation(Subu::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
