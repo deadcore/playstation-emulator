@@ -14,6 +14,12 @@ pub struct Registers {
 
     /// Cop0 register 12: Status Register
     sr: u32,
+
+    /// HI the remainder of the euclidean division.
+    hi: u32,
+
+    /// For a division LO will contain the quotient
+    lo: u32,
 }
 
 impl Registers {
@@ -27,6 +33,8 @@ impl Registers {
             regs,
             out_regs: regs,
             sr: 0,
+            hi: 0xdeadbeef,
+            lo: 0xdeadbeef
         }
     }
 
@@ -52,6 +60,22 @@ impl Registers {
 
     pub fn sr(&self) -> u32 {
         self.sr
+    }
+
+    pub fn hi(&self) -> u32 {
+        self.hi
+    }
+
+    pub fn set_hi(&mut self, hi: u32) {
+        self.hi = hi
+    }
+
+    pub fn lo(&self) -> u32 {
+        self.lo
+    }
+
+    pub fn set_lo(&mut self, lo: u32) {
+        self.lo = lo
     }
 
     /// Branch to immediate value 'offset'

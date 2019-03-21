@@ -27,7 +27,7 @@ impl Sra {
 }
 
 impl Operation for Sra {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
         let i = self.instruction.shift();
         let t = self.instruction.t();
         let d = self.instruction.d();
