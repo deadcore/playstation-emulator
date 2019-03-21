@@ -12,6 +12,7 @@ use crate::cpu::operations::beq::Beq;
 use crate::cpu::operations::bgtz::Bqtz;
 use crate::cpu::operations::bltz::Bltz;
 use crate::cpu::operations::bne::*;
+use crate::cpu::operations::bxx::Bxx;
 use crate::cpu::operations::j::*;
 use crate::cpu::operations::jal::Jal;
 use crate::cpu::operations::jalr::Jarl;
@@ -28,6 +29,7 @@ use crate::cpu::operations::ori::*;
 use crate::cpu::operations::sb::Sb;
 use crate::cpu::operations::sh::Sh;
 use crate::cpu::operations::sll::*;
+use crate::cpu::operations::slti::Slti;
 use crate::cpu::operations::sltu::Sltu;
 use crate::cpu::operations::sw::*;
 use crate::cpu::registers::Registers;
@@ -120,14 +122,10 @@ impl Cpu {
             0b000111 => self.execute_operation(Bqtz::new(instruction)),
             0b000110 => self.execute_operation(Bltz::new(instruction)),
             0b100100 => self.execute_operation(Lbu::new(instruction)),
+            0b000001 => self.execute_operation(Bxx::new(instruction)),
+            0b001010 => self.execute_operation(Slti::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
-    }
-
-    fn execute_operation(&mut self, op: impl Operation) {
-        debug!("[0x{:08x}] {}", self.registers.pc(), op.gnu());
-
-        op.perform(&mut self.registers, &mut self.interconnect, &mut self.load)
     }
 
     fn decode_and_execute_sub_function(&mut self, instruction: Instruction) {
@@ -151,5 +149,11 @@ impl Cpu {
             0b000000 => self.execute_operation(Mfc0::new(instruction)),
             _ => panic!("Unhandled cop0 instruction [0x{:08x}]. Cop0 call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
+    }
+
+    fn execute_operation(&mut self, op: impl Operation) {
+        debug!("[0x{:08x}] {}", self.registers.pc(), op.gnu());
+
+        op.perform(&mut self.registers, &mut self.interconnect, &mut self.load)
     }
 }
