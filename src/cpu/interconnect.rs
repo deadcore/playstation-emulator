@@ -92,6 +92,12 @@ impl Interconnect {
             return;
         }
 
+
+        if let Some(offset) = map::IRQCONTROL.contains(abs_addr) {
+            warn!("IRQ control: {:x} <− {:08x}", offset, val);
+            return;
+        }
+
         panic!("unhandled store32 into address 0x{:08x}", abs_addr)
     }
 
@@ -155,7 +161,10 @@ mod map {
     pub const SPU: Range = Range(0x1f801c00, 640);
 
     /// Unknown registers . The name comes from mednafen.
-//    pub const SYS_CONTROL: Range = Range(0x1f801000, 36);
+    pub const SYS_CONTROL: Range = Range(0x1f801000, 36);
+
+    /// Interrupt Control registers (status and mask)
+    pub const IRQCONTROL: Range = Range(0x1f801070, 8);
 
     /// Register that has something to do with RAM configuration
     /// configured by the BIOS
