@@ -9,11 +9,14 @@ use crate::cpu::operations::addu::Addu;
 use crate::cpu::operations::and::And;
 use crate::cpu::operations::andi::Andi;
 use crate::cpu::operations::beq::Beq;
+use crate::cpu::operations::bgtz::Bqtz;
+use crate::cpu::operations::bltz::Bltz;
 use crate::cpu::operations::bne::*;
 use crate::cpu::operations::j::*;
 use crate::cpu::operations::jal::Jal;
 use crate::cpu::operations::jr::Jr;
 use crate::cpu::operations::lb::Lb;
+use crate::cpu::operations::lbu::Lbu;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
 use crate::cpu::operations::mfc0::Mfc0;
@@ -113,6 +116,9 @@ impl Cpu {
             0b101000 => self.execute_operation(Sb::new(instruction)),
             0b100000 => self.execute_operation(Lb::new(instruction)),
             0b000100 => self.execute_operation(Beq::new(instruction)),
+            0b000111 => self.execute_operation(Bqtz::new(instruction)),
+            0b000110 => self.execute_operation(Bltz::new(instruction)),
+            0b100100 => self.execute_operation(Lbu::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
