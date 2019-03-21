@@ -32,6 +32,7 @@ pub mod jalr;
 pub mod bxx;
 pub mod slti;
 pub mod subu;
+pub mod sra;
 
 pub trait Operation {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay);
