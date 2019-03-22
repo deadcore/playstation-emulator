@@ -23,6 +23,7 @@ use crate::cpu::operations::lbu::Lbu;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
 use crate::cpu::operations::mfc0::Mfc0;
+use crate::cpu::operations::mflo::Mflo;
 use crate::cpu::operations::mtc0::*;
 use crate::cpu::operations::Operation;
 use crate::cpu::operations::or::*;
@@ -144,6 +145,7 @@ impl Cpu {
             0b100011 => self.execute_operation(Subu::new(instruction)),
             0b000011 => self.execute_operation(Sra::new(instruction)),
             0b011010 => self.execute_operation(Div::new(instruction)),
+            0b010010 => self.execute_operation(Mflo::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
