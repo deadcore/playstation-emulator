@@ -117,7 +117,7 @@ impl Interconnect {
             return self.ram.load8(offset);
         }
 
-        panic!("unhandled load8 at address {:08x}", addr);
+        panic!("unhandled load8 at address 0x{:08x}", addr);
     }
 
     pub fn load32(&self, addr: u32) -> u32 {
