@@ -38,6 +38,7 @@ pub mod mflo;
 pub mod srl;
 pub mod sltiu;
 pub mod divu;
+pub mod mfhi;
 
 pub trait Operation {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay);
