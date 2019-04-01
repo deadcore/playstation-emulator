@@ -17,7 +17,7 @@ impl Lb {
 }
 
 /// The next unhandled instruction is 0x81efe288 which encodes “load byte” (LB). As you can guess
-/// it’s like LW except that it only loads 8bits from the memory13:
+/// it’s like LW except that it only loads 8bits from the memory:
 ///
 /// lb $15, −7544($15)
 ///

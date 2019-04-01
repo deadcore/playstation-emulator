@@ -14,16 +14,14 @@ fn main() {
 
     let bios_filepath = match env::args().nth(1) {
         Some(x) => x,
-        None => {
-            panic!("usage: rpsx.exe rom game");
-        }
+        None => panic!("usage: rpsx.exe rom game")
     };
 
     let bios = Bios::new(&Path::new(&bios_filepath)).unwrap();
     let ram = Ram::new();
     let inter = Interconnect::new(
         bios,
-        ram
+        ram,
     );
     let mut cpu = Cpu::new(inter);
 

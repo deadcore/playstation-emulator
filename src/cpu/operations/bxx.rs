@@ -48,15 +48,23 @@ impl Operation for Bxx {
         let instruction = self.instruction.0;
 
         let is_bgez = (instruction >> 16) & 1;
-        let is_link = (instruction >> 20) & 1 != 0;
+        // It's not enough to test for bit 20 to see if we're supposed
+        // to link, if any bit in the range [19:17] is set the link
+        // doesn't take place and RA is left untouched.
+        let is_link = (instruction >> 17) & 0xf == 0x8;
 
         let v = registers.reg(s) as i32;
 
-        // Test ”less than zero”
+        // Test "less than zero"
         let test = (v < 0) as u32;
 
-        // If the test is ”greater than or equal to zero” we need // to negate the comparison above since
-        // (”a >= 0” <=> ”!(a < 0)”). The xor takes care of that. lettest=testˆisbgez;
+        // If the test is "greater than or equal to zero" we need to
+        // negate the comparison above ("a >= 0" <=> "!(a < 0)"). The
+        // xor takes care of that.
+        let test = test ^ is_bgez;
+
+        // If linking is requested it occurs unconditionally, even if
+        // the branch is not taken
         if test != 0 {
             if is_link {
                 let ra = registers.pc();
