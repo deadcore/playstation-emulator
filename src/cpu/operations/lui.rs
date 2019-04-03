@@ -18,7 +18,7 @@ impl Lui {
 }
 
 impl Operation for Lui {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) {
         let i = self.instruction.imm();
         let t = self.instruction.t();
 

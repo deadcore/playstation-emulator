@@ -43,6 +43,7 @@ use crate::cpu::operations::subu::Subu;
 use crate::cpu::operations::sw::*;
 use crate::cpu::registers::Registers;
 use crate::instruction::{Instruction, RegisterIndex};
+use crate::memory::Word;
 
 use self::interconnect::Interconnect;
 
@@ -88,7 +89,7 @@ impl Cpu {
     pub fn run_next_instruction(&mut self) {
         let pc = self.registers.pc();
         let instruction = self.next_instruction;
-        self.next_instruction = Instruction(self.load32(pc));
+        self.next_instruction = Instruction(self.interconnect.load::<Word>(pc));
 
         self.registers.increment_pc();
 
@@ -103,12 +104,6 @@ impl Cpu {
 
         self.registers.swap_registers();
     }
-
-    /// Load 32bit value from the interconnect
-    fn load32(&self, addr: u32) -> u32 {
-        self.interconnect.load32(addr)
-    }
-
 
     fn decode_and_execute(&mut self, instruction: Instruction) {
         match instruction.function() {
@@ -170,7 +165,7 @@ impl Cpu {
     }
 
     fn execute_operation(&mut self, op: impl Operation) {
-        debug!("[0x{:08x}] {}", self.registers.pc(), op.gnu());
+        debug!("0x{:08x}: {}", self.registers.pc(), op.gnu());
 
         op.perform(&mut self.registers, &mut self.interconnect, &mut self.load)
     }

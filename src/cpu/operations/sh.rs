@@ -3,6 +3,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
+use crate::memory::HalfWord;
 
 pub struct Sh {
     instruction: Instruction
@@ -29,7 +30,7 @@ impl Operation for Sh {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) {
         if registers.sr() & 0x10000 != 0 {
             // Cache is isolated , ignore write
-            warn!("Ignoring store while cache is isolated");
+            //warn!("Ignoring store while cache is isolated");
             return;
         }
 
@@ -40,7 +41,7 @@ impl Operation for Sh {
         let addr = registers.reg(s).wrapping_add(i);
         let v = registers.reg(t);
 
-        interconnect.store16(addr, v as u16);
+        interconnect.store::<HalfWord>(addr, v);
     }
 
     fn gnu(&self) -> String {

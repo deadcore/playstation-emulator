@@ -7,10 +7,14 @@ use std::path::Path;
 use rust_playstation_emulator::bios::Bios;
 use rust_playstation_emulator::cpu::Cpu;
 use rust_playstation_emulator::cpu::interconnect::Interconnect;
-use rust_playstation_emulator::ram::Ram;
+use rust_playstation_emulator::memory::ram::Ram;
 
 fn main() {
-    env_logger::init();
+    env_logger::builder()
+        .default_format_level(false)
+        .default_format_module_path(false)
+        .default_format_timestamp(false)
+        .init();
 
     let bios_filepath = match env::args().nth(1) {
         Some(x) => x,

@@ -3,6 +3,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
+use crate::memory::Word;
 
 /// Store Word
 pub struct Sw {
@@ -25,14 +26,14 @@ impl Operation for Sw {
 
         if registers.sr() & 0x10000 != 0 {
             // Cache is isolated , ignore write
-            warn!("ignoring store while cache is isolated");
+            //warn!("ignoring store while cache is isolated");
             return;
         }
 
         let addr = registers.reg(s).wrapping_add(i);
         let v = registers.reg(t);
 
-        interconnect.store32(addr, v)
+        interconnect.store::<Word>(addr, v)
     }
 
     fn gnu(&self) -> String {

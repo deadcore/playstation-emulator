@@ -3,6 +3,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
+use crate::memory::Byte;
 
 /// After that we meet instruction 0x90ae0000 which is a “load byte unsigned” (LBU):
 ///
@@ -30,7 +31,7 @@ impl Operation for Lbu {
 
         let addr = registers.reg(s).wrapping_add(i);
 
-        let v = interconnect.load8(addr);
+        let v = interconnect.load::<Byte>(addr);
 
         load.set(t, v as u32);
     }

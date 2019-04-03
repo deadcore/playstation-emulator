@@ -43,6 +43,10 @@ impl Registers {
     }
 
     pub fn set_reg(&mut self, index: RegisterIndex, val: u32) {
+        if index.0 == 2 {
+            println!("hit")
+        }
+
         self.out_regs[index.to_usize()] = val;
         // Make sure R0 is always 0
         self.out_regs[0] = 0;

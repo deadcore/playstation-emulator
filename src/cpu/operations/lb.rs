@@ -3,6 +3,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
+use crate::memory::Byte;
 
 pub struct Lb {
     instruction: Instruction
@@ -32,7 +33,7 @@ impl Operation for Lb {
 
         let addr = registers.reg(s).wrapping_add(i);
 
-        let v = interconnect.load8(addr) as i8;
+        let v = interconnect.load::<Byte>(addr) as i8;
 
         load.set(t, v as u32);
     }

@@ -3,6 +3,8 @@ use std::io::{Error, ErrorKind, Result};
 use std::io::Read;
 use std::path::Path;
 
+use crate::memory::Addressable;
+
 /// BIOS image
 pub struct Bios {
     /// BIOS memory
@@ -28,17 +30,16 @@ impl Bios {
         }
     }
 
-    /// Fetch the 32bit little endian word at ‘offset ‘
-    pub fn load32(&self, offset: u32) -> u32 {
+    /// fetch the little endian value at `offset`
+    pub fn load<T: Addressable>(&self, offset: u32) -> u32 {
         let offset = offset as usize;
-        let b0 = self.data[offset + 0] as u32;
-        let b1 = self.data[offset + 1] as u32;
-        let b2 = self.data[offset + 2] as u32;
-        let b3 = self.data[offset + 3] as u32;
-        b0 | (b1 << 8) | (b2 << 16) | (b3 << 24)
-    }
 
-    pub fn load8(&self, offset: u32) -> u8 {
-        self.data[offset as usize]
+        let mut r = 0;
+
+        for i in 0..T::size() as usize {
+            r |= (self.data[offset + i] as u32) << (8 * i)
+        }
+
+        r
     }
 }

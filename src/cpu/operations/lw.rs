@@ -3,6 +3,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
+use crate::memory::Word;
 
 pub struct Lw {
     instruction: Instruction
@@ -24,18 +25,25 @@ impl Lw {
 impl Operation for Lw {
     /// Load word
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) {
-        if registers.sr() & 0x10000 != 0 { // Cache is isolated , ignore write
-            warn!("Ignoring load while cache is isolated");
-            return;
-        }
 
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
 
+        if i == 4 && t.0 == 14 {
+            println!("hit")
+        }
+
+        if registers.sr() & 0x10000 != 0 { // Cache is isolated , ignore write
+            //warn!("Ignoring load while cache is isolated");
+            return;
+        }
+
+
+
         let addr = registers.reg(s).wrapping_add(i);
 
-        let v = interconnect.load32(addr);
+        let v = interconnect.load::<Word>(addr);
 
         load.set(t, v);
     }
