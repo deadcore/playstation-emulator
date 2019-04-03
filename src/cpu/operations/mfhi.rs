@@ -23,7 +23,7 @@ impl Mfhi {
 }
 
 impl Operation for Mfhi {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
         let d = self.instruction.d();
         let hi = registers.hi();
 

@@ -25,7 +25,7 @@ impl Mflo {
 }
 
 impl Operation for Mflo {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, load: &mut Delay) {
         let d = self.instruction.d();
         let lo = registers.lo();
 

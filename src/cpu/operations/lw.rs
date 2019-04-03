@@ -30,16 +30,10 @@ impl Operation for Lw {
         let t = self.instruction.t();
         let s = self.instruction.s();
 
-        if i == 4 && t.0 == 14 {
-            println!("hit")
-        }
-
         if registers.sr() & 0x10000 != 0 { // Cache is isolated , ignore write
             //warn!("Ignoring load while cache is isolated");
             return;
         }
-
-
 
         let addr = registers.reg(s).wrapping_add(i);
 

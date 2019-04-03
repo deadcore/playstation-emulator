@@ -118,7 +118,7 @@ impl Interconnect {
                 panic!("ScratchPad access through uncached memory");
             }
 
-            panic!("Unhandled")
+            panic!("Unhandled write to SCRATCH_PAD {:x}", offset);
         }
 
         if let Some(offset) = map::IRQ_CONTROL.contains(abs_addr) {
@@ -127,23 +127,23 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::DMA.contains(abs_addr) {
-            panic!("Unhandled")
+            panic!("Unhandled write to DMA {:x}", offset);
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {
-            panic!("Unhandled")
+            panic!("Unhandled write to GPU {:x}", offset);
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
-            panic!("Unhandled")
+            panic!("Unhandled write to TIMERS {:x}", offset);
         }
 
         if let Some(offset) = map::CDROM.contains(abs_addr) {
-            panic!("Unhandled")
+            panic!("Unhandled write to CDROM {:x}", offset);
         }
 
         if let Some(offset) = map::MDEC.contains(abs_addr) {
-            panic!("Unhandled")
+            panic!("Unhandled write to MDEC {:x}", offset);
         }
 
         if let Some(offset) = map::SPU.contains(abs_addr) {
@@ -151,7 +151,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::PAD_MEMCARD.contains(abs_addr) {
-            panic!("Unhandled")
+            panic!("Unhandled write to PAD_MEMCARD {:x}", offset);
         }
 
         if let Some(_) = map::CACHE_CONTROL.contains(abs_addr) {
