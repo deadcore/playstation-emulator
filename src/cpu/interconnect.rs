@@ -135,7 +135,8 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
-            panic!("Unhandled write to TIMERS {:x}", offset);
+            warn!("Unhandled write to timer register {:x}", offset);
+            return;
         }
 
         if let Some(offset) = map::CDROM.contains(abs_addr) {
