@@ -2,6 +2,7 @@ extern crate env_logger;
 extern crate log;
 
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception::SysCall;
 use crate::cpu::operations::add::Add;
 use crate::cpu::operations::addi::Addi;
 use crate::cpu::operations::addiu::*;
@@ -41,6 +42,7 @@ use crate::cpu::operations::sra::Sra;
 use crate::cpu::operations::srl::Srl;
 use crate::cpu::operations::subu::Subu;
 use crate::cpu::operations::sw::*;
+use crate::cpu::operations::syscall::Syscall;
 use crate::cpu::registers::Registers;
 use crate::instruction::{Instruction, RegisterIndex};
 use crate::memory::Word;
@@ -51,6 +53,7 @@ pub mod interconnect;
 pub mod registers;
 pub mod delay;
 pub mod operations;
+pub mod exception;
 
 /// CPU state
 pub struct Cpu {
@@ -151,6 +154,7 @@ impl Cpu {
             0b000010 => self.execute_operation(Srl::new(instruction)),
             0b011011 => self.execute_operation(Divu::new(instruction)),
             0b101010 => self.execute_operation(Slt::new(instruction)),
+            0x0000000c => self.execute_operation(Syscall::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }

@@ -11,9 +11,9 @@ use rust_playstation_emulator::memory::ram::Ram;
 
 fn main() {
     env_logger::builder()
-        .default_format_level(false)
-        .default_format_module_path(false)
-        .default_format_timestamp(false)
+//        .default_format_level(false)
+//        .default_format_module_path(false)
+//        .default_format_timestamp(false)
         .init();
 
     let bios_filepath = match env::args().nth(1) {
