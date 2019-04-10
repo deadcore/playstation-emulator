@@ -32,7 +32,8 @@ impl Operation for Mfc0 {
 
         let v = match cop_r {
             12 => registers.sr(),
-            13 => panic!("Unhandled read from CAUSE register"),
+            13 => registers.cause(),
+            14 => registers.epc(),
             _ => panic!("Unhandled read from cop0r{}", cop_r),
         };
 

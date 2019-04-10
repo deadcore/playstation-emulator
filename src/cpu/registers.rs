@@ -3,7 +3,22 @@ use crate::instruction::RegisterIndex;
 
 pub struct Registers {
     /// The program counter register
+    /// points to the next instruction
     pc: u32,
+
+    /// Next value for the PC, used to simulate the
+    /// branch delay slot
+    next_pc: u32,
+
+    /// Address of the instruction currently being executed. Used for
+    /// setting the EPC in exceptions .
+    current_pc: u32,
+
+    /// Cop0 register 13: Cause Register
+    cause: u32,
+
+    /// Cop0 register 14: EPC
+    epc: u32,
 
     /// General purpose registers
     /// The first entry must always contain 0
@@ -29,13 +44,19 @@ impl Registers {
         // R0 is hardwired to 0
         regs[0] = 0;
 
+        let pc = 0xbfc00000;
+
         Registers {
-            pc: 0xbfc00000,
+            pc,
+            next_pc: pc.wrapping_add(4),
+            current_pc: 0,
             regs,
             out_regs: regs,
             sr: 0,
+            cause: 0,
+            epc: 0,
             hi: 0xdeadbeef,
-            lo: 0xdeadbeef
+            lo: 0xdeadbeef,
         }
     }
 
@@ -59,6 +80,22 @@ impl Registers {
         self.sr = val
     }
 
+    pub fn set_next_pc(&mut self, next_pc: u32) {
+        self.next_pc = next_pc
+    }
+
+    pub fn next_pc(&self) -> u32 {
+        self.next_pc
+    }
+
+    pub fn current_pc(&self) -> u32 {
+        self.current_pc
+    }
+
+    pub fn set_current_pc(&mut self, current_pc: u32) {
+        self.current_pc = current_pc
+    }
+
     pub fn sr(&self) -> u32 {
         self.sr
     }
@@ -77,6 +114,14 @@ impl Registers {
 
     pub fn set_lo(&mut self, lo: u32) {
         self.lo = lo
+    }
+
+    pub fn cause(&self) -> u32 {
+        self.cause
+    }
+
+    pub fn epc(&self) -> u32 {
+        self.epc
     }
 
     /// Branch to immediate value 'offset'

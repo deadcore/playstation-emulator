@@ -62,9 +62,6 @@ pub struct Cpu {
     /// Memory interface
     interconnect: Interconnect,
 
-    /// Next instruction to be executed , used to simulate the branch delay slot
-    next_instruction: Instruction,
-
     /// Load initiated by the current instruction (will take effect
     /// after the load delay slot)
     load: Delay,
@@ -76,28 +73,23 @@ impl Cpu {
         Cpu {
             registers: Registers::new(),
             interconnect,
-            next_instruction: Instruction(0x0),
             load: Delay::new(),
         }
     }
 
-    pub fn reg(&self, index: RegisterIndex) -> u32 {
-        self.registers.reg(index)
-    }
-
-    pub fn set_reg(&mut self, index: RegisterIndex, val: u32) {
-        self.registers.set_reg(index, val)
-    }
-
     pub fn run_next_instruction(&mut self) {
         let pc = self.registers.pc();
-        let instruction = self.next_instruction;
-        self.next_instruction = Instruction(self.interconnect.load::<Word>(pc));
+        let instruction = Instruction(self.interconnect.load::<Word>(pc));
 
-        self.registers.increment_pc();
+        // Save the address of the current instruction to save in
+        // ‘EPC‘ in case of an exception.
+        self.registers.set_current_pc(pc);
+
+        self.registers.set_pc(self.registers.next_pc());
+        self.registers.set_next_pc(self.registers.next_pc().wrapping_add(4));
 
         let (reg, val) = self.load.value();
-        self.set_reg(reg, val);
+        self.registers.set_reg(reg, val);
 
         // We reset the load to target register 0 for the next
         // instruction

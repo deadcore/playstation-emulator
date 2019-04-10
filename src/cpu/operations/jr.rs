@@ -27,7 +27,7 @@ impl Operation for Jr {
     fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
         let s = self.instruction.s();
 
-        registers.set_pc(registers.reg(s));
+        registers.set_next_pc(registers.reg(s));
     }
 
     fn gnu(&self) -> String {

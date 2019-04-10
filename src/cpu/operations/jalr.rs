@@ -33,7 +33,7 @@ impl Operation for Jarl {
         // Store return address in ‘d‘
         registers.set_reg(d, ra);
 
-        registers.set_pc(registers.reg(s));
+        registers.set_next_pc(registers.reg(s));
     }
 
     fn gnu(&self) -> String {
