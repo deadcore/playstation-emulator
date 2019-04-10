@@ -28,7 +28,7 @@ impl Operation for Jarl {
         let d = self.instruction.d();
         let s = self.instruction.s();
 
-        let ra = registers.pc();
+        let ra = registers.next_pc();
 
         // Store return address in ‘d‘
         registers.set_reg(d, ra);

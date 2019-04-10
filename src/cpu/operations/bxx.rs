@@ -67,7 +67,7 @@ impl Operation for Bxx {
         // the branch is not taken
         if test != 0 {
             if is_link {
-                let ra = registers.pc();
+                let ra = registers.next_pc();
 
                 // Store return address in R31
                 registers.set_reg(RegisterIndex(31), ra);

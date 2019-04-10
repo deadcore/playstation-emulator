@@ -80,17 +80,12 @@ impl Registers {
 
     /// Branch to immediate value 'offset'
     pub fn branch(&mut self, offset: u32) {
+        // Offset immediates are always shifted two places to the
+        // right since `PC` addresses have to be aligned on 32bits at
+        // all times.
         let offset = offset << 2;
 
-        let mut pc = self.pc;
-
-        pc = pc.wrapping_add(offset);
-
-        // We need to compensate for the hardcoded
-        // ‘pc.wrapping add(4) ‘ in ‘run next instruction ‘
-        pc = pc.wrapping_sub(4);
-
-        self.pc = pc;
+        self.next_pc = self.pc.wrapping_add(offset);
     }
 
     pub fn pc(&self) -> u32 {

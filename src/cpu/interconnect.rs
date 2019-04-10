@@ -122,7 +122,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::IRQ_CONTROL.contains(abs_addr) {
-            warn!("IRQ control: {:x} <− {:08x}", offset, val);
+            warn!("Unhandled IRQ control: {:x} <− {:08x}", offset, val);
             return;
         }
 
@@ -135,7 +135,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
-            warn!("Unhandled write to timer register {:x}", offset);
+            warn!("Unhandled TIMERS control: {:x} <− {:08x}", offset, val);
             return;
         }
 
@@ -148,6 +148,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::SPU.contains(abs_addr) {
+            warn!("SPU control: {:x} <− {:08x}", offset, val);
             return;
         }
 
@@ -198,8 +199,7 @@ impl Interconnect {
             return;
         }
 
-        panic!("unhandled store into address {:08x}: {:08x}",
-               addr, val);
+        panic!("unhandled store into address 0x{:08x}: {:08x}", addr, val);
     }
 }
 
