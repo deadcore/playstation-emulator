@@ -22,6 +22,7 @@ use crate::cpu::operations::jalr::Jarl;
 use crate::cpu::operations::jr::Jr;
 use crate::cpu::operations::lb::Lb;
 use crate::cpu::operations::lbu::Lbu;
+use crate::cpu::operations::lhu::Lhu;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
 use crate::cpu::operations::mfc0::Mfc0;
@@ -139,6 +140,7 @@ impl Cpu {
             0b000001 => Box::new(Bxx::new(instruction)),
             0b001010 => Box::new(Slti::new(instruction)),
             0b001011 => Box::new(Sltiu::new(instruction)),
+            0b100101 => Box::new(Lhu::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }

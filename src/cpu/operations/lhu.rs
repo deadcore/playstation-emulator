@@ -4,7 +4,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
-use crate::memory::Byte;
+use crate::memory::{Byte, HalfWord};
 
 /// The next unhandled instruction is 0x961901ae which is “load halfword unsigned” (LHU):
 ///
@@ -31,10 +31,14 @@ impl Operation for Lhu {
 
         let addr = registers.reg(s).wrapping_add(i);
 
-        let v = interconnect.load::<Byte>(addr);
-
-        load.set(t, v as u32);
-        None
+        // Address must be 16 bit aligned
+        if addr % 2 == 0 {
+            let v = interconnect.load::<HalfWord>(addr);
+            load.set(t, v as u32);
+            None
+        } else {
+            Some(Exception::LoadAddressError)
+        }
     }
 
     fn gnu(&self) -> String {

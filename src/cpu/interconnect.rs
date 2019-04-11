@@ -64,7 +64,8 @@ impl Interconnect {
         }
 
         if let Some(_) = map::SPU.contains(abs_addr) {
-            panic!("Unhandled SPU load at address 0x{:08x}", addr)
+            warn!("Unhandled read from SPU register 0x{:08x}", abs_addr);
+            return 0;
         }
 
         if let Some(_) = map::PAD_MEMCARD.contains(abs_addr) {
