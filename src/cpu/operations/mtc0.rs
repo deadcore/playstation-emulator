@@ -1,4 +1,5 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
@@ -18,7 +19,7 @@ impl Mtc0 {
 }
 
 impl Operation for Mtc0 {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let cpu_r = self.instruction.t();
         let cop_r = self.instruction.d().0;
 
@@ -36,6 +37,7 @@ impl Operation for Mtc0 {
                 },
             _ => panic!("Unhandled cop0 register {}", cop_r),
         }
+        None
     }
 
     fn gnu(&self) -> String {

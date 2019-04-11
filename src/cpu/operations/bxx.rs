@@ -1,4 +1,5 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
@@ -41,7 +42,7 @@ impl Bxx {
 impl Operation for Bxx {
     /// Various branch instructions: BGEZ, BLTZ, BGEZAL, BLTZAL.
     /// Bits 16 and 20 are used to figure out which one to use.
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
 
@@ -74,6 +75,7 @@ impl Operation for Bxx {
             }
             registers.branch(i);
         }
+        None
     }
 
     fn gnu(&self) -> String {

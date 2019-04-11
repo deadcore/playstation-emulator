@@ -3,26 +3,20 @@ use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
-use crate::instruction::Instruction;
 
-/// Store Word
-pub struct Syscall {
-    instruction: Instruction
-}
+/// Syscall
+pub struct Syscall {}
 
 impl Syscall {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Syscall {
-            instruction
-        }
+    pub fn new() -> impl Operation {
+        Syscall {}
     }
 }
 
 impl Operation for Syscall {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
-        registers.enter_exception(Exception::SysCall)
+    fn perform(&self, _: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+        Some(Exception::SysCall)
     }
-
 
     fn gnu(&self) -> String {
         format!("SYSCALL")

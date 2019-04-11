@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// An other easy instruction follows a few cycles later: 0x00412024 which is a “bitwise and” (AND):
+/// An other easy instruction follows a few cycles later: 0x00412024 which is a “bitwise and" (AND):
 ///
 /// and $4, $2, $1
 ///
@@ -23,7 +24,7 @@ impl And {
 }
 
 impl Operation for And {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let d = self.instruction.d();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -31,6 +32,7 @@ impl Operation for And {
         let v = registers.reg(s) & registers.reg(t);
 
         registers.set_reg(d, v);
+        None
     }
 
     fn gnu(&self) -> String {

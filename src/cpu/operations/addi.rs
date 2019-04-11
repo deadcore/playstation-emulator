@@ -1,4 +1,7 @@
+use std::option::Option;
+
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
@@ -18,19 +21,20 @@ impl Addi {
 }
 
 impl Operation for Addi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se() as i32;
         let t = self.instruction.t();
         let s = self.instruction.s();
 
         let s = registers.reg(s) as i32;
 
-        let v = match s.checked_add(i) {
-            Some(v) => v as u32,
-            None => panic!("ADDI overflow"),
-        };
-
-        registers.set_reg(t, v);
+        match s.checked_add(i) {
+            Some(v) => {
+                registers.set_reg(t, v as u32);
+                None
+            },
+            None => Some(Exception::Overflow),
+        }
     }
 
     fn gnu(&self) -> String {

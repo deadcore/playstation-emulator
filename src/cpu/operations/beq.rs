@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We then get a new branch instruction: 0x11e0000c is “branch if equal” (BEQ):
+/// We then get a new branch instruction: 0x11e0000c is “branch if equal" (BEQ):
 ///
 /// beq $15, $zero, +48
 ///
@@ -22,7 +23,7 @@ impl Beq {
 }
 
 impl Operation for Beq {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -30,6 +31,7 @@ impl Operation for Beq {
         if registers.reg(s) == registers.reg(t) {
             registers.branch(i);
         }
+        None
     }
 
     fn gnu(&self) -> String {

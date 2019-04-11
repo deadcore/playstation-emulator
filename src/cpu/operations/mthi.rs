@@ -5,27 +5,33 @@ use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-pub struct J {
+/// Unsurprisingly the MTLO is almost immediately followed by instruction 0x00400011 which is “move
+/// to HI" (MTHI):
+///
+/// mtlo $2
+pub struct Mtlo {
     instruction: Instruction
 }
 
-impl J {
+impl Mtlo {
     pub fn new(instruction: Instruction) -> impl Operation {
-        J {
+        Mtlo {
             instruction
         }
     }
 }
 
-impl Operation for J {
+impl Operation for Mtlo {
     fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
-        let i = self.instruction.imm_jump();
+        let s = self.instruction.s();
 
-        registers.set_next_pc((registers.pc() & 0xf0000000) | (i << 2));
+        registers.set_lo(registers.reg(s));
         None
     }
 
     fn gnu(&self) -> String {
-        format!("J")
+        let s = self.instruction.s();
+
+        format!("mtlo {}", s)
     }
 }

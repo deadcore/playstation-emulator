@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// Now we encounter the other division instruction: 0x0064001b which encodes “divide unsigned” (DIVU):
+/// Now we encounter the other division instruction: 0x0064001b which encodes “divide unsigned" (DIVU):
 ///
 /// divu $3, $4
 ///
@@ -23,7 +24,7 @@ impl Divu {
 }
 
 impl Operation for Divu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
 
@@ -38,6 +39,7 @@ impl Operation for Divu {
             registers.set_hi(n % d);
             registers.set_lo(n / d);
         }
+        None
     }
 
     fn gnu(&self) -> String {

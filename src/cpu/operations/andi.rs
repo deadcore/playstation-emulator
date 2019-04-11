@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We continue with instruction 0x308400ff which is a “bitwise and immediate” (ANDI):
+/// We continue with instruction 0x308400ff which is a “bitwise and immediate" (ANDI):
 ///
 /// andi $4, $4, 0xff
 /// 
@@ -22,13 +23,14 @@ impl Andi {
 }
 
 impl Operation for Andi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm();
         let t = self.instruction.t();
         let s = self.instruction.s();
         let v = registers.reg(s) & i;
 
         registers.set_reg(t, v);
+        None
     }
 
     fn gnu(&self) -> String {

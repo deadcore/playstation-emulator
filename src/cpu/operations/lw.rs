@@ -1,4 +1,5 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
@@ -17,29 +18,32 @@ impl Lw {
     }
 }
 
-/// “load word”. It decodes to:
+/// “load word". It decodes to:
 ///
 /// lw $9, 0($8)
 ///
 /// We can reuse the load32 method to fetch the data from memory:
 impl Operation for Lw {
     /// Load word
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) {
-
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
 
         if registers.sr() & 0x10000 != 0 { // Cache is isolated , ignore write
-            //warn!("Ignoring load while cache is isolated");
-            return;
+            warn!("Ignoring load while cache is isolated");
+            return None;
         }
 
         let addr = registers.reg(s).wrapping_add(i);
 
-        let v = interconnect.load::<Word>(addr);
-
-        load.set(t, v);
+        if addr % 4 == 0 {
+            let v = interconnect.load::<Word>(addr);
+            load.set(t, v);
+            None
+        } else {
+            Some(Exception::LoadAddressError)
+        }
     }
 
     fn gnu(&self) -> String {

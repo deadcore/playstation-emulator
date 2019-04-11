@@ -1,4 +1,5 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
@@ -18,20 +19,20 @@ impl Sh {
 }
 
 /// The next unhandled instruction is 0xa5200180 which encodes
-/// “store halfword” (SH). It’s used to write 16bits (a halfword)
+/// “store halfword" (SH). It’s used to write 16bits (a halfword)
 /// to the memory:
 ///
 /// sh $zero , 0x180($9)
 ///
-/// The implementation is very similar to the “store word” instruction
+/// The implementation is very similar to the “store word" instruction
 /// except we truncate the register to 16bits and we’ll have to
 /// implement a new store16 method on our interconnect12:
 impl Operation for Sh {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         if registers.sr() & 0x10000 != 0 {
             // Cache is isolated , ignore write
-            //warn!("Ignoring store while cache is isolated");
-            return;
+            warn!("Ignoring store while cache is isolated");
+            return None;
         }
 
         let i = self.instruction.imm_se();
@@ -39,9 +40,15 @@ impl Operation for Sh {
         let s = self.instruction.s();
 
         let addr = registers.reg(s).wrapping_add(i);
-        let v = registers.reg(t);
 
-        interconnect.store::<HalfWord>(addr, v);
+        if addr % 2 == 0 {
+            let v = registers.reg(t);
+
+            interconnect.store::<HalfWord>(addr, v);
+            None
+        } else {
+            Some(Exception::StoreAddressError)
+        }
     }
 
     fn gnu(&self) -> String {

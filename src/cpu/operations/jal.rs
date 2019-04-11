@@ -1,11 +1,12 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::j::J;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::{Instruction, RegisterIndex};
 
-/// The next unhandled instruction should be 0x0ff00698 which is a “jump and link” (JAL).
+/// The next unhandled instruction should be 0x0ff00698 which is a “jump and link" (JAL).
 /// It behaves like the regular jump instruction except that it also stores the return
 /// address in $ra ($31):
 ///
@@ -30,12 +31,13 @@ impl Jal {
 }
 
 impl Operation for Jal {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, delay: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, delay: &mut Delay) -> Option<Exception> {
         let ra = registers.next_pc();
 
         J::new(self.instruction).perform(registers, interconnect, delay);
 
         registers.set_reg(RegisterIndex(31), ra);
+        None
     }
 
     fn gnu(&self) -> String {

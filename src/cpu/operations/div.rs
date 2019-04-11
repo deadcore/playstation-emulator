@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// The next unhandled instruction is 0x0061001a which is “divide” (DIV):
+/// The next unhandled instruction is 0x0061001a which is “divide" (DIV):
 ///
 /// div $3, $1
 ///
@@ -30,7 +31,7 @@ impl Div {
 }
 
 impl Operation for Div {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
 
@@ -55,6 +56,7 @@ impl Operation for Div {
             registers.set_hi((n % d) as u32);
             registers.set_lo((n / d) as u32);
         }
+        None
     }
 
     fn gnu(&self) -> String {

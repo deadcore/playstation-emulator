@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We already implemented MFLO, now we meet instruction 0x0000c810 which encodes “move from HI” (MFHI):
+/// We already implemented MFLO, now we meet instruction 0x0000c810 which encodes “move from HI" (MFHI):
 ///
 /// mfhi $25
 ///
@@ -23,11 +24,12 @@ impl Mfhi {
 }
 
 impl Operation for Mfhi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let d = self.instruction.d();
         let hi = registers.hi();
 
         registers.set_reg(d, hi);
+        None
     }
 
     fn gnu(&self) -> String {

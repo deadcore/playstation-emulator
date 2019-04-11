@@ -1,4 +1,5 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::registers::Registers;
 
@@ -42,9 +43,12 @@ pub mod mfhi;
 pub mod slt;
 pub mod syscall;
 pub mod mtlo;
+pub mod rfe;
+pub mod mthi;
+pub mod lhu;
 
 pub trait Operation {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay);
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception>;
 
     fn gnu(&self) -> String;
 }

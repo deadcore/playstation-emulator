@@ -2,6 +2,7 @@ extern crate env_logger;
 extern crate log;
 
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::operations::add::Add;
 use crate::cpu::operations::addi::Addi;
 use crate::cpu::operations::addiu::*;
@@ -27,10 +28,12 @@ use crate::cpu::operations::mfc0::Mfc0;
 use crate::cpu::operations::mfhi::Mfhi;
 use crate::cpu::operations::mflo::Mflo;
 use crate::cpu::operations::mtc0::*;
-use crate::cpu::operations::mtlo::Mtlo;
+use crate::cpu::operations::mthi::Mtlo;
+use crate::cpu::operations::mtlo::Mthi;
 use crate::cpu::operations::Operation;
 use crate::cpu::operations::or::*;
 use crate::cpu::operations::ori::*;
+use crate::cpu::operations::rfe::Rfe;
 use crate::cpu::operations::sb::Sb;
 use crate::cpu::operations::sh::Sh;
 use crate::cpu::operations::sll::*;
@@ -78,6 +81,7 @@ impl Cpu {
     }
 
     pub fn run_next_instruction(&mut self) {
+        // TODO - Raise PC alignment exception
         let pc = self.registers.pc();
         let instruction = Instruction(self.interconnect.load::<Word>(pc));
 
@@ -95,16 +99,23 @@ impl Cpu {
         // instruction
         self.load.reset();
 
-        let operation = self.decode_and_execute(instruction);
+        // If the last instruction was a branch then we’re in the // delay slot
+        self.load.set_delay_slot(self.load.branch());
+        self.load.set_branch(false);
+
+        let operation = self.decode(instruction);
 
         debug!("0x{:08x}: {}", self.registers.pc(), operation.gnu());
 
-        operation.perform(&mut self.registers, &mut self.interconnect, &mut self.load);
+        match operation.perform(&mut self.registers, &mut self.interconnect, &mut self.load) {
+            Some(exception) => self.enter_exception(exception),
+            None => {}
+        }
 
         self.registers.swap_registers();
     }
 
-    fn decode_and_execute(&mut self, instruction: Instruction) -> Box<dyn Operation> {
+    fn decode(&mut self, instruction: Instruction) -> Box<dyn Operation> {
         match instruction.function() {
             0b000000 => self.decode_and_execute_sub_function(instruction),
             0b001111 => Box::new(Lui::new(instruction)),
@@ -150,8 +161,9 @@ impl Cpu {
             0b000010 => Box::new(Srl::new(instruction)),
             0b011011 => Box::new(Divu::new(instruction)),
             0b101010 => Box::new(Slt::new(instruction)),
-            0b001100 => Box::new(Syscall::new(instruction)),
+            0b001100 => Box::new(Syscall::new()),
             0b010011 => Box::new(Mtlo::new(instruction)),
+            0b010001 => Box::new(Mthi::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
@@ -161,7 +173,60 @@ impl Cpu {
         match instruction.cop_opcode() {
             0b000100 => Box::new(Mtc0::new(instruction)),
             0b000000 => Box::new(Mfc0::new(instruction)),
+            0b010000 => Box::new(Rfe::new(instruction)),
             _ => panic!("Unhandled cop0 instruction [0x{:08x}]. Cop0 call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
+    }
+
+    /// Update SR, CAUSE and EPC when an exception is
+    /// triggered. Returns the address of the exception handler.
+    fn enter_exception(&mut self, cause: Exception) {
+        info!("Exception encountered");
+
+        // Exception handler address depends on the ‘BEV‘ bit:
+        let handler = match self.registers.sr() & (1 << 22) != 0 {
+            true => 0xbfc00180,
+            false => 0x80000080,
+        };
+
+        // Shift bits [5:0] of `SR` two places to the left. Those bits
+        // are three pairs of Interrupt Enable/User Mode bits behaving
+        // like a stack 3 entries deep. Entering an exception pushes a
+        // pair of zeroes by left shifting the stack which disables
+        // interrupts and puts the CPU in kernel mode. The original
+        // third entry is discarded (it's up to the kernel to handle
+        // more than two recursive exception levels).
+        let mode = self.registers.sr() & 0x3f;
+
+        let mut sr = self.registers.sr();
+
+        sr &= !0x3f;
+        sr |= (mode << 2) & 0x3f;
+
+        self.registers.set_sr(sr);
+
+        // Update `CAUSE` register with the exception code (bits
+        // [6:2])
+        let mut register_cause = self.registers.cause();
+
+        register_cause |= (cause as u32) << 2;
+
+        self.registers.set_cause(register_cause);
+
+        // Save current instruction address in ‘EPC‘
+        self.registers.set_epc(self.registers.current_pc());
+
+        if self.load.delay_slot() {
+            // When an exception occurs in a delay slot `EPC` points
+            // to the branch instruction and bit 31 of `CAUSE` is set.
+            self.registers.set_epc(self.registers.pc().wrapping_sub(4));
+            let mut cause = self.registers.cause();
+            cause |= 1 << 31;
+            self.registers.set_cause(cause);
+        }
+
+        // into the handler
+        self.registers.set_pc(handler);
+        self.registers.set_next_pc(self.registers.pc().wrapping_add(4));
     }
 }

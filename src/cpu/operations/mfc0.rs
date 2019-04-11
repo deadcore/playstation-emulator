@@ -1,11 +1,12 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
 /// We’ve already met MTC0, now we encounter the reciprocal instruction: 0x40026000 encodes “move
-/// from coprocessor 0” (MFC0)16:
+/// from coprocessor 0" (MFC0)16:
 ///
 /// mfc0 $2, $cop0 12
 ///
@@ -26,7 +27,7 @@ impl Mfc0 {
 }
 
 impl Operation for Mfc0 {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) -> Option<Exception> {
         let cpu_r = self.instruction.t();
         let cop_r = self.instruction.d().0;
 
@@ -37,7 +38,9 @@ impl Operation for Mfc0 {
             _ => panic!("Unhandled read from cop0r{}", cop_r),
         };
 
-        delay.set(cpu_r, v)
+        delay.set(cpu_r, v);
+
+        None
     }
 
     fn gnu(&self) -> String {

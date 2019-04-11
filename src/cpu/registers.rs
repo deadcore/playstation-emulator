@@ -120,8 +120,16 @@ impl Registers {
         self.cause
     }
 
+    pub fn set_cause(&mut self, cause: u32) {
+        self.cause = cause
+    }
+
     pub fn epc(&self) -> u32 {
         self.epc
+    }
+
+    pub fn set_epc(&mut self, epc: u32) {
+        self.epc = epc
     }
 
     /// Branch to immediate value 'offset'
@@ -148,41 +156,5 @@ impl Registers {
 
     pub fn set_pc(&mut self, pc: u32) {
         self.pc = pc
-    }
-
-    /// Update SR, CAUSE and EPC when an exception is
-    /// triggered. Returns the address of the exception handler.
-    pub fn enter_exception(&mut self, cause: Exception) {
-
-        // Exception handler address depends on the ‘BEV‘ bit:
-        let handler = match self.sr & (1 << 22) != 0 {
-            true => 0xbfc00180,
-            false => 0x80000080,
-        };
-
-        // Shift bits [5:0] of `SR` two places to the left. Those bits
-        // are three pairs of Interrupt Enable/User Mode bits behaving
-        // like a stack 3 entries deep. Entering an exception pushes a
-        // pair of zeroes by left shifting the stack which disables
-        // interrupts and puts the CPU in kernel mode. The original
-        // third entry is discarded (it's up to the kernel to handle
-        // more than two recursive exception levels).
-        let mode = self.sr & 0x3f;
-
-        self.sr &= !0x3f;
-        self.sr |= (mode << 2) & 0x3f;
-
-        // Update `CAUSE` register with the exception code (bits
-        // [6:2])
-        self.cause |= (cause as u32) << 2;
-
-        // Save current instruction address in ‘EPC‘
-        self.epc = self.current_pc;
-
-        // Exceptions don't have a branch delay, we jump directly
-
-        // into the handler
-        self.pc = handler;
-        self.next_pc = self.pc.wrapping_add(4);
     }
 }

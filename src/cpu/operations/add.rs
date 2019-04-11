@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We already implemented ADDIU, ADDI and ADDU. We finally encounter “add” (ADD) in instruction 0x01094020:
+/// We already implemented ADDIU, ADDI and ADDU. We finally encounter “add" (ADD) in instruction 0x01094020:
 ///
 /// add $8, $8, $9
 ///
@@ -23,7 +24,7 @@ impl Add {
 }
 
 impl Operation for Add {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
         let d = self.instruction.d();
@@ -31,12 +32,15 @@ impl Operation for Add {
         let s = registers.reg(s) as i32;
         let t = registers.reg(t) as i32;
 
-        let v = match s.checked_add(t) {
-            Some(v) => v as u32,
-            None => panic!("ADD overflow"),
-        };
-
-        registers.set_reg(d, v);
+        match s.checked_add(t) {
+            Some(v) => {
+                registers.set_reg(d, v as u32);
+                None
+            },
+            None => {
+                Some(Exception::Overflow)
+            },
+        }
     }
 
     fn gnu(&self) -> String {

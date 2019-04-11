@@ -1,11 +1,12 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 use crate::memory::Byte;
 
-/// After that we meet instruction 0x90ae0000 which is a “load byte unsigned” (LBU):
+/// After that we meet instruction 0x90ae0000 which is a “load byte unsigned" (LBU):
 ///
 /// lbu $14, 0($5)
 ///
@@ -24,7 +25,7 @@ impl Lbu {
 }
 
 impl Operation for Lbu {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -34,6 +35,7 @@ impl Operation for Lbu {
         let v = interconnect.load::<Byte>(addr);
 
         load.set(t, v as u32);
+        None
     }
 
     fn gnu(&self) -> String {

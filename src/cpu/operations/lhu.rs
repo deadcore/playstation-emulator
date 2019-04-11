@@ -6,44 +6,42 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 use crate::memory::Byte;
 
-/// Store Word
-pub struct Sb {
+/// The next unhandled instruction is 0x961901ae which is “load halfword unsigned” (LHU):
+///
+/// lhu $25 , 430($16)
+///
+/// It’s the 16bit counterpart to LBU and it’s our first 16bit load istruction:
+pub struct Lhu {
     instruction: Instruction
 }
 
-impl Sb {
+impl Lhu {
     pub fn new(instruction: Instruction) -> impl Operation {
-        Sb {
+        Lhu {
             instruction
         }
     }
 }
 
-impl Operation for Sb {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
-        if registers.sr() & 0x10000 != 0 {
-            // Cache is isolated , ignore write
-            warn!("ignoring store while cache is isolated");
-            return None;
-        }
-
+impl Operation for Lhu {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
 
         let addr = registers.reg(s).wrapping_add(i);
-        let v = registers.reg(t);
 
-        interconnect.store::<Byte>(addr, v);
+        let v = interconnect.load::<Byte>(addr);
 
+        load.set(t, v as u32);
         None
     }
 
     fn gnu(&self) -> String {
-        let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
+        let i = self.instruction.imm_se();
 
-        format!("SB {}, 0x{:04x}({})", t, i, s)
+        format!("lhu {}, 0x{:08x}({})", t, i, s)
     }
 }

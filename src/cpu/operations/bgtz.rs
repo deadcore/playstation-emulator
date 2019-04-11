@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// The next unhandled instruction is 0x1ca00003 which is a “branch if greater than zero” (BGTZ):
+/// The next unhandled instruction is 0x1ca00003 which is a “branch if greater than zero" (BGTZ):
 ///
 /// bgtz $5 , +12
 ///
@@ -30,7 +31,7 @@ impl Bqtz {
 }
 
 impl Operation for Bqtz {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
 
@@ -39,6 +40,7 @@ impl Operation for Bqtz {
         if v > 0 {
             registers.branch(i);
         }
+        None
     }
 
     fn gnu(&self) -> String {

@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// The next unhandled instruction is 0x0338082a which is “set on less than”:
+/// The next unhandled instruction is 0x0338082a which is “set on less than":
 ///
 /// slt $1, $25, $24
 ///
@@ -23,7 +24,7 @@ impl Slt {
 
 impl Operation for Slt {
     /// Set on Less Than (signed)
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let d = self.instruction.d();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -33,6 +34,7 @@ impl Operation for Slt {
         let v = s < t;
 
         registers.set_reg(d, v as u32);
+        None
     }
 
     fn gnu(&self) -> String {

@@ -43,31 +43,32 @@ impl Interconnect {
         }
 
         if let Some(_) = map::DMA.contains(abs_addr) {
-            panic!("Unhandled DMA load at address {:08x}", addr)
+            warn!("DMA read: 0x{:08x}", abs_addr);
+            return 0;
         }
 
         if let Some(_) = map::GPU.contains(abs_addr) {
-            panic!("Unhandled GPU load at address {:08x}", addr)
+            panic!("Unhandled GPU load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::TIMERS.contains(abs_addr) {
-            panic!("Unhandled TIMERS load at address {:08x}", addr)
+            panic!("Unhandled TIMERS load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::CDROM.contains(abs_addr) {
-            panic!("Unhandled CDROM load at address {:08x}", addr)
+            panic!("Unhandled CDROM load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::MDEC.contains(abs_addr) {
-            panic!("Unhandled MDEC load at address {:08x}", addr)
+            panic!("Unhandled MDEC load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::SPU.contains(abs_addr) {
-            panic!("Unhandled SPU load at address {:08x}", addr)
+            panic!("Unhandled SPU load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::PAD_MEMCARD.contains(abs_addr) {
-            panic!("Unhandled PAD_MEMCARD load at address {:08x}", addr)
+            panic!("Unhandled PAD_MEMCARD load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::EXPANSION_1.contains(abs_addr) {
@@ -125,7 +126,8 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::DMA.contains(abs_addr) {
-            panic!("Unhandled write to DMA {:x}", offset);
+            warn!("DMA write: 0x{:08x} <- 0x{:08x}", abs_addr, val);
+            return;
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {

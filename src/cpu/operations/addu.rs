@@ -1,4 +1,5 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
@@ -18,14 +19,16 @@ impl Addu {
 }
 
 impl Operation for Addu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
         let d = self.instruction.d();
 
         let v = registers.reg(s).wrapping_add(registers.reg(t));
 
-        registers.set_reg(d, v)
+        registers.set_reg(d, v);
+
+        None
     }
 
     fn gnu(&self) -> String {

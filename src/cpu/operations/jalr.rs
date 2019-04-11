@@ -1,10 +1,11 @@
 use crate::cpu::delay::Delay;
+use crate::cpu::exception::Exception;
 use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// Then we encounter instruction 0x0100f809 which encodes a “jump and link register” (JALR):
+/// Then we encounter instruction 0x0100f809 which encodes a “jump and link register" (JALR):
 ///
 /// jalr $31, $8
 ///
@@ -24,7 +25,7 @@ impl Jarl {
 }
 
 impl Operation for Jarl {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
         let d = self.instruction.d();
         let s = self.instruction.s();
 
@@ -34,6 +35,7 @@ impl Operation for Jarl {
         registers.set_reg(d, ra);
 
         registers.set_next_pc(registers.reg(s));
+        None
     }
 
     fn gnu(&self) -> String {
