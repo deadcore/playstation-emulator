@@ -15,7 +15,7 @@ pub struct Slti {
 }
 
 impl Slti {
-    pub fn new(instruction: Instruction) -> Slti {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Slti {
             instruction
         }

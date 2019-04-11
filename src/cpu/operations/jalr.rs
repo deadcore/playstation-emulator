@@ -16,7 +16,7 @@ pub struct Jarl {
 }
 
 impl Jarl {
-    pub fn new(instruction: Instruction) -> Jarl {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Jarl {
             instruction
         }

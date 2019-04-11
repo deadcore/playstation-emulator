@@ -18,7 +18,7 @@ pub struct Mfc0 {
 }
 
 impl Mfc0 {
-    pub fn new(instruction: Instruction) -> Mfc0 {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Mfc0 {
             instruction
         }

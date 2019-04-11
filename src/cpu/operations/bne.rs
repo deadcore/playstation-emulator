@@ -9,7 +9,7 @@ pub struct Bne {
 }
 
 impl Bne {
-    pub fn new(instruction: Instruction) -> Bne {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Bne {
             instruction
         }

@@ -10,7 +10,7 @@ pub struct Lb {
 }
 
 impl Lb {
-    pub fn new(instruction: Instruction) -> Lb {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Lb {
             instruction
         }

@@ -16,7 +16,7 @@ pub struct Jr {
 }
 
 impl Jr {
-    pub fn new(instruction: Instruction) -> Jr {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Jr {
             instruction
         }

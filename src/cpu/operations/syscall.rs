@@ -4,7 +4,6 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
-use crate::memory::Word;
 
 /// Store Word
 pub struct Syscall {
@@ -12,7 +11,7 @@ pub struct Syscall {
 }
 
 impl Syscall {
-    pub fn new(instruction: Instruction) -> Syscall {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Syscall {
             instruction
         }

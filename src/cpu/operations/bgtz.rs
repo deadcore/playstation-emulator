@@ -22,7 +22,7 @@ pub struct Bqtz {
 }
 
 impl Bqtz {
-    pub fn new(instruction: Instruction) -> Bqtz {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Bqtz {
             instruction
         }

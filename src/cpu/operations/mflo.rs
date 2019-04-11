@@ -17,7 +17,7 @@ pub struct Mflo {
 }
 
 impl Mflo {
-    pub fn new(instruction: Instruction) -> Mflo {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Mflo {
             instruction
         }
@@ -25,7 +25,7 @@ impl Mflo {
 }
 
 impl Operation for Mflo {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, load: &mut Delay) {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) {
         let d = self.instruction.d();
         let lo = registers.lo();
 

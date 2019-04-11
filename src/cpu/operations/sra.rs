@@ -19,7 +19,7 @@ pub struct Sra {
 }
 
 impl Sra {
-    pub fn new(instruction: Instruction) -> Sra {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Sra {
             instruction
         }

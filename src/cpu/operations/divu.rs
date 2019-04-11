@@ -15,7 +15,7 @@ pub struct Divu {
 }
 
 impl Divu {
-    pub fn new(instruction: Instruction) -> Divu {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Divu {
             instruction
         }

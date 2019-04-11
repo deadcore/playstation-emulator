@@ -16,7 +16,7 @@ pub struct Lbu {
 }
 
 impl Lbu {
-    pub fn new(instruction: Instruction) -> Lbu {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Lbu {
             instruction
         }

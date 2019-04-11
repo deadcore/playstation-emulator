@@ -17,7 +17,7 @@ pub struct Srl {
 }
 
 impl Srl {
-    pub fn new(instruction: Instruction) -> Srl {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Srl {
             instruction
         }

@@ -15,7 +15,7 @@ pub struct Mfhi {
 }
 
 impl Mfhi {
-    pub fn new(instruction: Instruction) -> Mfhi {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Mfhi {
             instruction
         }

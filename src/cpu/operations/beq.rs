@@ -14,7 +14,7 @@ pub struct Beq {
 }
 
 impl Beq {
-    pub fn new(instruction: Instruction) -> Beq {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Beq {
             instruction
         }

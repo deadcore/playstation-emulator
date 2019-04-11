@@ -15,7 +15,7 @@ pub struct Bltz {
 }
 
 impl Bltz {
-    pub fn new(instruction: Instruction) -> Bltz {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Bltz {
             instruction
         }

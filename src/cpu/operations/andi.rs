@@ -14,7 +14,7 @@ pub struct Andi {
 }
 
 impl Andi {
-    pub fn new(instruction: Instruction) -> Andi {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Andi {
             instruction
         }

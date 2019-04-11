@@ -14,7 +14,7 @@ pub struct Subu {
 }
 
 impl Subu {
-    pub fn new(instruction: Instruction) -> Subu {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Subu {
             instruction
         }

@@ -25,7 +25,7 @@ impl Interconnect {
             return self.ram.load::<A>(offset);
         }
 
-        if let Some(offset) = map::SCRATCH_PAD.contains(abs_addr) {
+        if let Some(_) = map::SCRATCH_PAD.contains(abs_addr) {
             if addr > 0xa0000000 {
                 panic!("ScratchPad access through uncached memory");
             }
@@ -42,35 +42,35 @@ impl Interconnect {
             return 0;
         }
 
-        if let Some(offset) = map::DMA.contains(abs_addr) {
+        if let Some(_) = map::DMA.contains(abs_addr) {
             panic!("Unhandled DMA load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::GPU.contains(abs_addr) {
+        if let Some(_) = map::GPU.contains(abs_addr) {
             panic!("Unhandled GPU load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::TIMERS.contains(abs_addr) {
+        if let Some(_) = map::TIMERS.contains(abs_addr) {
             panic!("Unhandled TIMERS load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::CDROM.contains(abs_addr) {
+        if let Some(_) = map::CDROM.contains(abs_addr) {
             panic!("Unhandled CDROM load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::MDEC.contains(abs_addr) {
+        if let Some(_) = map::MDEC.contains(abs_addr) {
             panic!("Unhandled MDEC load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::SPU.contains(abs_addr) {
+        if let Some(_) = map::SPU.contains(abs_addr) {
             panic!("Unhandled SPU load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::PAD_MEMCARD.contains(abs_addr) {
+        if let Some(_) = map::PAD_MEMCARD.contains(abs_addr) {
             panic!("Unhandled PAD_MEMCARD load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::EXPANSION_1.contains(abs_addr) {
+        if let Some(_) = map::EXPANSION_1.contains(abs_addr) {
             // No expansion implemented
             return 0xff;
         }
@@ -79,12 +79,10 @@ impl Interconnect {
             panic!("Unhandled RAM_SIZE load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::MEM_CONTROL.contains(abs_addr) {
+        if let Some(_) = map::MEM_CONTROL.contains(abs_addr) {
             if A::size() != 4 {
                 panic!("Unhandled MEM_CONTROL access ({})", A::size());
             }
-
-            let index = (offset >> 2) as usize;
 
             panic!("Unhandled MEM_CONTROL load at address {:08x}", addr)
         }
@@ -97,7 +95,7 @@ impl Interconnect {
             panic!("Unhandled CACHE_CONTROL load at address {:08x}", addr)
         }
 
-        if let Some(offset) = map::EXPANSION_2.contains(abs_addr) {
+        if let Some(_) = map::EXPANSION_2.contains(abs_addr) {
             panic!("Unhandled EXPANSION_2 load at address {:08x}", addr)
         }
 
@@ -195,7 +193,7 @@ impl Interconnect {
             return;
         }
 
-        if let Some(offset) = map::EXPANSION_2.contains(abs_addr) {
+        if let Some(_) = map::EXPANSION_2.contains(abs_addr) {
             return;
         }
 

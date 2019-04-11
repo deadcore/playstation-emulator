@@ -15,7 +15,7 @@ pub struct Add {
 }
 
 impl Add {
-    pub fn new(instruction: Instruction) -> Add {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Add {
             instruction
         }

@@ -31,7 +31,7 @@ pub struct Bxx {
 }
 
 impl Bxx {
-    pub fn new(instruction: Instruction) -> Bxx {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Bxx {
             instruction
         }

@@ -10,7 +10,7 @@ pub struct Or {
 }
 
 impl Or {
-    pub fn new(instruction: Instruction) -> Or {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Or {
             instruction
         }

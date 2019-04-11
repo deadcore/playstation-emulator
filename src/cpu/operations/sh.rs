@@ -10,7 +10,7 @@ pub struct Sh {
 }
 
 impl Sh {
-    pub fn new(instruction: Instruction) -> Sh {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Sh {
             instruction
         }

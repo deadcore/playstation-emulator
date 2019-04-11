@@ -22,7 +22,7 @@ pub struct Div {
 }
 
 impl Div {
-    pub fn new(instruction: Instruction) -> Div {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Div {
             instruction
         }

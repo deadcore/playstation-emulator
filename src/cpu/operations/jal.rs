@@ -22,7 +22,7 @@ pub struct Jal {
 }
 
 impl Jal {
-    pub fn new(instruction: Instruction) -> Jal {
+    pub fn new(instruction: Instruction) -> impl Operation {
         Jal {
             instruction
         }
