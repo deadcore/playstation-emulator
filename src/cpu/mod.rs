@@ -32,6 +32,7 @@ use crate::cpu::operations::mflo::Mflo;
 use crate::cpu::operations::mtc0::*;
 use crate::cpu::operations::mthi::Mtlo;
 use crate::cpu::operations::mtlo::Mthi;
+use crate::cpu::operations::nor::Nor;
 use crate::cpu::operations::Operation;
 use crate::cpu::operations::or::*;
 use crate::cpu::operations::ori::*;
@@ -152,6 +153,7 @@ impl Cpu {
         match instruction.subfunction() {
             0b000000 => Box::new(Sll::new(instruction)),
             0b100101 => Box::new(Or::new(instruction)),
+            0b100111 => Box::new(Nor::new(instruction)),
             0b101011 => Box::new(Sltu::new(instruction)),
             0b100001 => Box::new(Addu::new(instruction)),
             0b001000 => Box::new(Jr::new(instruction)),

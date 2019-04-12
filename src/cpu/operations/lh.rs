@@ -51,6 +51,6 @@ impl Operation for Lh {
         let s = self.instruction.s();
         let i = self.instruction.imm_se();
 
-        format!("LW {}, 0x{:04x}({})", t, i, s)
+        format!("lh {}, 0x{:04x}({})", t, i, s)
     }
 }
