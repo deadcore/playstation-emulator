@@ -172,6 +172,7 @@ impl Cpu {
             0b010011 => Box::new(Mtlo::new(instruction)),
             0b010001 => Box::new(Mthi::new(instruction)),
             0b000100 => Box::new(Sllv::new(instruction)),
+
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }

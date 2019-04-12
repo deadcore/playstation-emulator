@@ -47,8 +47,14 @@ impl Interconnect {
             return 0;
         }
 
-        if let Some(_) = map::GPU.contains(abs_addr) {
-            panic!("Unhandled GPU load at address 0x{:08x}", addr)
+        if let Some(offset) = map::GPU.contains(abs_addr) {
+            trace!("GPU read {}", offset);
+            return match offset {
+                // GPUSTAT: set bit 28 to signal that the GPU is ready
+                // to receive DMA blocks
+                4 => 0x10000000,
+                _ => 0,
+            }
         }
 
         if let Some(_) = map::TIMERS.contains(abs_addr) {
@@ -132,7 +138,8 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {
-            panic!("Unhandled write to GPU {:x}", offset);
+            warn!("GPU write {}: {:08x}", offset, val);
+            return;
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
