@@ -50,6 +50,7 @@ use crate::cpu::operations::srl::Srl;
 use crate::cpu::operations::subu::Subu;
 use crate::cpu::operations::sw::*;
 use crate::cpu::operations::syscall::Syscall;
+use crate::cpu::operations::xor::Xor;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 use crate::memory::Word;
@@ -172,7 +173,7 @@ impl Cpu {
             0b010011 => Box::new(Mtlo::new(instruction)),
             0b010001 => Box::new(Mthi::new(instruction)),
             0b000100 => Box::new(Sllv::new(instruction)),
-
+            0b100110 => Box::new(Xor::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
