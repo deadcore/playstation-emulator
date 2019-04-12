@@ -22,6 +22,7 @@ use crate::cpu::operations::jalr::Jarl;
 use crate::cpu::operations::jr::Jr;
 use crate::cpu::operations::lb::Lb;
 use crate::cpu::operations::lbu::Lbu;
+use crate::cpu::operations::lh::Lh;
 use crate::cpu::operations::lhu::Lhu;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
@@ -38,6 +39,7 @@ use crate::cpu::operations::rfe::Rfe;
 use crate::cpu::operations::sb::Sb;
 use crate::cpu::operations::sh::Sh;
 use crate::cpu::operations::sll::*;
+use crate::cpu::operations::sllv::Sllv;
 use crate::cpu::operations::slt::Slt;
 use crate::cpu::operations::slti::Slti;
 use crate::cpu::operations::sltiu::Sltiu;
@@ -141,6 +143,7 @@ impl Cpu {
             0b001010 => Box::new(Slti::new(instruction)),
             0b001011 => Box::new(Sltiu::new(instruction)),
             0b100101 => Box::new(Lhu::new(instruction)),
+            0b100001 => Box::new(Lh::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
@@ -166,6 +169,7 @@ impl Cpu {
             0b001100 => Box::new(Syscall::new()),
             0b010011 => Box::new(Mtlo::new(instruction)),
             0b010001 => Box::new(Mthi::new(instruction)),
+            0b000100 => Box::new(Sllv::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }

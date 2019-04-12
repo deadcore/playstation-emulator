@@ -46,6 +46,8 @@ pub mod mtlo;
 pub mod rfe;
 pub mod mthi;
 pub mod lhu;
+pub mod sllv;
+pub mod lh;
 
 pub trait Operation {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception>;
