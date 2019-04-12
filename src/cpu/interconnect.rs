@@ -1,6 +1,7 @@
 use crate::bios::Bios;
 use crate::memory::Addressable;
 use crate::memory::dma::Dma;
+use crate::memory::dma::port::Port;
 use crate::memory::ram::Ram;
 
 /// Global interconnect
@@ -133,7 +134,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::DMA.contains(abs_addr) {
-            return self.set_dma_reg(offset, val)
+            return self.set_dma_reg(offset, val);
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {
@@ -188,9 +189,7 @@ impl Interconnect {
                         panic!("Bad expansion 2 base address: 0x{:08x}", val);
                     },
                 _ =>
-                    warn!("Unhandled write to MEM_CONTROL register {:x}: \
-                           0x{:08x}",
-                          offset, val),
+                    warn!("Unhandled write to MEM_CONTROL register {:x}: 0x{:08x}", offset, val),
             }
             return;
         }
@@ -210,16 +209,50 @@ impl Interconnect {
     }
 
     fn set_dma_reg(&mut self, offset: u32, val: u32) {
-        match offset {
-            0x70 => self.dma.set_control(val),
-            _ => panic!("unhandled DMA write access 0x{:08x} <-0x{:08x} ", offset, val)
+        let major = (offset & 0x70) >> 4;
+        let minor = offset & 0xf;
+
+        // Per−channel registers
+        match major {
+            0...6 => {
+                let port = Port::from_index(major);
+                let channel = self.dma.channel_mut(port);
+                match minor {
+                    8 => channel.set_control(val),
+                    _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+                }
+            }
+            7 => {
+                match minor {
+                    0 => self.dma.set_control(val),
+                    4 => self.dma.set_interrupt(val),
+                    _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+                }
+            }
+            _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
         }
     }
 
     fn dma_reg(&self, offset: u32) -> u32 {
-        match offset {
-            0x70 => self.dma.control(),
-            _ => panic!("unhandled DMA access 0x{:08x}", offset)
+        let major = (offset & 0x70) >> 4;
+        let minor = offset & 0xf;
+
+        match major {
+            // Per−channel registers
+            0...6 => {
+                let channel = self.dma.channel(Port::from_index(major));
+                match minor {
+                    8 => channel.control(),
+                    _ => panic!("unhandled DMA access 0x{:x}", offset)
+                }
+            }
+            // Common DMA registers
+            7 => match minor {
+                0 => self.dma.control(),
+                4 => self.dma.interrupt(),
+                _ => panic!("unhandled DMA access 0x{:x}", offset),
+            }
+            _ => panic!("unhandled DMA access 0x{:x}", offset)
         }
     }
 }
