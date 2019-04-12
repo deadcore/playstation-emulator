@@ -1,13 +1,14 @@
 use crate::bios::Bios;
 use crate::memory::Addressable;
+use crate::memory::dma::Dma;
 use crate::memory::ram::Ram;
 
 /// Global interconnect
 pub struct Interconnect {
     /// Basic Input/Output memory
     bios: Bios,
-
     ram: Ram,
+    dma: Dma,
 }
 
 impl Interconnect {
@@ -15,6 +16,7 @@ impl Interconnect {
         Interconnect {
             bios,
             ram,
+            dma: Dma::new(),
         }
     }
     /// Interconnect: load value at `addr`
@@ -42,9 +44,8 @@ impl Interconnect {
             return 0;
         }
 
-        if let Some(_) = map::DMA.contains(abs_addr) {
-            warn!("DMA read: 0x{:08x}", abs_addr);
-            return 0;
+        if let Some(offset) = map::DMA.contains(abs_addr) {
+            return self.dma_reg(offset);
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {
@@ -54,7 +55,7 @@ impl Interconnect {
                 // to receive DMA blocks
                 4 => 0x10000000,
                 _ => 0,
-            }
+            };
         }
 
         if let Some(_) = map::TIMERS.contains(abs_addr) {
@@ -115,8 +116,7 @@ impl Interconnect {
         let abs_addr = map::mask_region(addr);
 
         if let Some(offset) = map::RAM.contains(abs_addr) {
-            self.ram.store::<A>(offset, val);
-            return;
+            return self.ram.store::<A>(offset, val);
         }
 
         if let Some(offset) = map::SCRATCH_PAD.contains(abs_addr) {
@@ -133,8 +133,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::DMA.contains(abs_addr) {
-            warn!("DMA write: 0x{:08x} <- 0x{:08x}", abs_addr, val);
-            return;
+            return self.set_dma_reg(offset, val)
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {
@@ -208,6 +207,20 @@ impl Interconnect {
         }
 
         panic!("unhandled store into address 0x{:08x}: {:08x}", addr, val);
+    }
+
+    fn set_dma_reg(&mut self, offset: u32, val: u32) {
+        match offset {
+            0x70 => self.dma.set_control(val),
+            _ => panic!("unhandled DMA write access 0x{:08x} <-0x{:08x} ", offset, val)
+        }
+    }
+
+    fn dma_reg(&self, offset: u32) -> u32 {
+        match offset {
+            0x70 => self.dma.control(),
+            _ => panic!("unhandled DMA access 0x{:08x}", offset)
+        }
     }
 }
 

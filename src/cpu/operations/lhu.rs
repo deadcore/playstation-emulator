@@ -4,7 +4,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
-use crate::memory::{Byte, HalfWord};
+use crate::memory::HalfWord;
 
 /// The next unhandled instruction is 0x961901ae which is “load halfword unsigned” (LHU):
 ///

@@ -1,4 +1,3 @@
-use crate::cpu::exception::Exception;
 use crate::instruction::RegisterIndex;
 
 pub struct Registers {

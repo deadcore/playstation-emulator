@@ -1,5 +1,5 @@
 pub mod ram;
-
+pub mod dma;
 
 /// Trait representing the attributes of a memory access
 pub trait Addressable {

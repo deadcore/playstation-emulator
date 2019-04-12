@@ -4,7 +4,7 @@ use crate::cpu::interconnect::Interconnect;
 use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
-use crate::memory::{HalfWord, Word};
+use crate::memory::HalfWord;
 
 /// We implemented LHU not long ago and now we meet 0x87a30018 which is “load halfword” (LH):
 ///
