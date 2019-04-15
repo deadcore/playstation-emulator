@@ -32,7 +32,6 @@ impl RegisterIndex {
     }
 }
 
-
 impl Display for RegisterIndex {
     fn fmt(&self, f: &mut Formatter) -> Result {
         write!(f, "{}", self.name())

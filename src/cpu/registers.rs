@@ -131,6 +131,10 @@ impl Registers {
         self.epc = epc
     }
 
+    pub fn out_regs(&self) -> [u32; 32] {
+        self.out_regs
+    }
+
     /// Branch to immediate value 'offset'
     pub fn branch(&mut self, offset: u32) {
         // Offset immediates are always shifted two places to the

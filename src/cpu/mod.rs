@@ -26,6 +26,8 @@ use crate::cpu::operations::lh::Lh;
 use crate::cpu::operations::lhu::Lhu;
 use crate::cpu::operations::lui::*;
 use crate::cpu::operations::lw::Lw;
+use crate::cpu::operations::lwl::Lwl;
+use crate::cpu::operations::lwr::Lwr;
 use crate::cpu::operations::mfc0::Mfc0;
 use crate::cpu::operations::mfhi::Mfhi;
 use crate::cpu::operations::mflo::Mflo;
@@ -150,7 +152,8 @@ impl Cpu {
             0b001011 => Box::new(Sltiu::new(instruction)),
             0b100101 => Box::new(Lhu::new(instruction)),
             0b100001 => Box::new(Lh::new(instruction)),
-            0b100010 => Box::new(Sub::new(instruction)),
+            0b100010 => Box::new(Lwl::new(instruction)),
+            0b100110 => Box::new(Lwr::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
@@ -181,6 +184,7 @@ impl Cpu {
             0b100110 => Box::new(Xor::new(instruction)),
             0b011001 => Box::new(Multu::new(instruction)),
             0b000110 => Box::new(Srlv::new(instruction)),
+            0b100010 => Box::new(Sub::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
