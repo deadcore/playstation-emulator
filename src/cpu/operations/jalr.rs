@@ -9,7 +9,7 @@ use crate::instruction::Instruction;
 ///
 /// jalr $31, $8
 ///
-/// It’s implemented like JR except that it also stores the return address in a general purpose
+/// It's implemented like JR except that it also stores the return address in a general purpose
 /// register. Unlike JAL, JALR can store the return address in any general purpose register, not just
 /// $ra:
 pub struct Jarl {

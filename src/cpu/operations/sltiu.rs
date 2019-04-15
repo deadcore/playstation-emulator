@@ -9,7 +9,7 @@ use crate::instruction::Instruction;
 ///
 /// sltiu $1, $2, 0x45
 ///
-/// It’s implemented like SLTI but using unsigned integers18:
+/// It's implemented like SLTI but using unsigned integers18:
 pub struct Sltiu {
     instruction: Instruction
 }

@@ -9,7 +9,7 @@ use crate::instruction::Instruction;
 ///
 /// slt $1, $25, $24
 ///
-/// It’s like SLTU but with signed operands:
+/// It's like SLTU but with signed operands:
 pub struct Slt {
     instruction: Instruction
 }

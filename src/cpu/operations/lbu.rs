@@ -10,7 +10,7 @@ use crate::memory::Byte;
 ///
 /// lbu $14, 0($5)
 ///
-/// It’s exactly like LB but without sign extension, the high 24 bits of the target
+/// It's exactly like LB but without sign extension, the high 24 bits of the target
 /// register are set to 0:
 pub struct Lbu {
     instruction: Instruction

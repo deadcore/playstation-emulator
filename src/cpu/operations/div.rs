@@ -15,7 +15,7 @@ use crate::instruction::Instruction;
 /// For a division LO will contain the quotient and HI the remainder of the euclidean division.
 ///
 /// The reason for this is that divisions and multiplications are typically much slower than the
-/// other instructions we’ve implemented so far (with the exception of loads and stores potentially,
+/// other instructions we've implemented so far (with the exception of loads and stores potentially,
 /// due to the memory latency). While a simple ADD or SRA can be executed in a single CPU cycle, DIV
 /// can take as much as 36 cycles to get the result.
 pub struct Div {

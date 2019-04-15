@@ -10,7 +10,7 @@ use crate::instruction::Instruction;
 ///
 /// blez $5, +20
 ///
-/// It’s the same thing as BGTZ with the opposite predicate:
+/// It's the same thing as BGTZ with the opposite predicate:
 pub struct Bltz {
     instruction: Instruction
 }

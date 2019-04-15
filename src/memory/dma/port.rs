@@ -1,4 +1,5 @@
 /// The 7 DMA ports
+#[derive(Clone, Copy, Eq, PartialEq)]
 pub enum Port {
     /// Macroblock decoder input
     MDecIn = 0,

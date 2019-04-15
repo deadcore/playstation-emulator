@@ -13,16 +13,19 @@ pub struct Dma {
 
     /// master IRQ enable
     irq_en: bool,
+
     /// IRQ enable for individual channels
     channel_irq_en: u8,
+
     /// IRQ flags for individual channels
     channel_irq_flags: u8,
-    /// When set the interrupt is active unconditionally (even if /// 'irqen' is false)
+
+    /// When set the interrupt is active unconditionally (even if 'irqen' is false)
     force_irq: bool,
 
-    /// Bits know /// what them /// back
-    /// [0:5] of the interrupt registers are RW but I don’t
-    /// they’re supposed to do so I just store them and send
+    /// Bits know what them back
+    /// [0:5] of the interrupt registers are RW but I don't
+    /// they're supposed to do so I just store them and send
     /// untouched on reads
     irq_dummy: u8,
 

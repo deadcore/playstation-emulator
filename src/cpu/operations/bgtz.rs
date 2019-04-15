@@ -9,7 +9,7 @@ use crate::instruction::Instruction;
 ///
 /// bgtz $5 , +12
 ///
-/// It’s similar to the BEQ and BNE we’ve already encountered but instead of comparing two registers
+/// It's similar to the BEQ and BNE we've already encountered but instead of comparing two registers
 /// it compares a single general purpose register to 0.
 /// The comparison is done using signed integers. For unsigned integers the test would only ever be
 /// false if the register contained 0 and we can already test that with BNE:

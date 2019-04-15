@@ -12,7 +12,7 @@ use crate::instruction::{Instruction, RegisterIndex};
 ///
 /// jal 0xfc01a60
 ///
-/// Using this instruction it’s easy to implement function calls: the instruction is
+/// Using this instruction it's easy to implement function calls: the instruction is
 /// called with JAL and can return to the caller by jumping to the value in $ra. Then
 /// the control returns to the calling function. The $ra register is the link between the
 /// caller and the callee.

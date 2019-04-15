@@ -19,13 +19,13 @@ impl Sh {
 }
 
 /// The next unhandled instruction is 0xa5200180 which encodes
-/// “store halfword" (SH). It’s used to write 16bits (a halfword)
+/// “store halfword" (SH). It's used to write 16bits (a halfword)
 /// to the memory:
 ///
 /// sh $zero , 0x180($9)
 ///
 /// The implementation is very similar to the “store word" instruction
-/// except we truncate the register to 16bits and we’ll have to
+/// except we truncate the register to 16bits and we'll have to
 /// implement a new store16 method on our interconnect12:
 impl Operation for Sh {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Option<Exception> {

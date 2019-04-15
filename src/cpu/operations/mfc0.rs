@@ -5,12 +5,12 @@ use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We’ve already met MTC0, now we encounter the reciprocal instruction: 0x40026000 encodes “move
+/// We've already met MTC0, now we encounter the reciprocal instruction: 0x40026000 encodes “move
 /// from coprocessor 0" (MFC0)16:
 ///
 /// mfc0 $2, $cop0 12
 ///
-/// There’s one important thing to note however: MFC instructions behave like memory loads and have
+/// There's one important thing to note however: MFC instructions behave like memory loads and have
 /// a delay slot before the value is finally stored in the target register.
 ///
 /// Fortunately we can simply re-use our load delay slots infrastructure:

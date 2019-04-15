@@ -9,9 +9,9 @@ use crate::instruction::Instruction;
 ///
 /// sllv $25 , $24 , $3
 ///
-/// It’s like SLL except the shift amount is stored in a register instead of an immediate value.
-/// The implementation is quite simple but there’s something to consider: so far the shift amount
-/// was always a 5bit immediate value but this time it’s a 32bit register. What happens when the
+/// It's like SLL except the shift amount is stored in a register instead of an immediate value.
+/// The implementation is quite simple but there's something to consider: so far the shift amount
+/// was always a 5bit immediate value but this time it's a 32bit register. What happens when the
 /// register value is greater than 31?
 pub struct Sllv {
     instruction: Instruction

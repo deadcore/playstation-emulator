@@ -10,7 +10,7 @@ use crate::memory::HalfWord;
 ///
 /// lhu $25 , 430($16)
 ///
-/// It’s the 16bit counterpart to LBU and it’s our first 16bit load istruction:
+/// It's the 16bit counterpart to LBU and it's our first 16bit load istruction:
 pub struct Lhu {
     instruction: Instruction
 }

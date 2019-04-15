@@ -10,7 +10,7 @@ use crate::memory::HalfWord;
 ///
 /// lh $3, 24($29)
 ///
-/// It’s implemented like LHU but it sign-extends the 16bit value to fit the 32bit
+/// It's implemented like LHU but it sign-extends the 16bit value to fit the 32bit
 /// target register:
 pub struct Lh {
     instruction: Instruction

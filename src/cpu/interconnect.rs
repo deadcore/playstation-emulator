@@ -1,7 +1,10 @@
 use crate::bios::Bios;
-use crate::memory::Addressable;
+use crate::memory::{Addressable, Word};
+use crate::memory::dma::direction::Direction;
 use crate::memory::dma::Dma;
 use crate::memory::dma::port::Port;
+use crate::memory::dma::step::Step;
+use crate::memory::dma::sync::Sync;
 use crate::memory::ram::Ram;
 
 /// Global interconnect
@@ -52,15 +55,18 @@ impl Interconnect {
         if let Some(offset) = map::GPU.contains(abs_addr) {
             trace!("GPU read {}", offset);
             return match offset {
-                // GPUSTAT: set bit 28 to signal that the GPU is ready
-                // to receive DMA blocks
-                4 => 0x10000000,
+                // GPUSTAT: set bit 26, 27 28 to signal that the GPU
+                // is ready for DMA and CPU access. This way the BIOS
+                // won’t dead lock waiting for an event that’ll never
+                // come .
+                4 => 0x1c000000,
                 _ => 0,
             };
         }
 
-        if let Some(_) = map::TIMERS.contains(abs_addr) {
-            panic!("Unhandled TIMERS load at address 0x{:08x}", addr)
+        if let Some(offset) = map::TIMERS.contains(abs_addr) {
+            warn!("TIMERS control read {:x}", offset);
+            return 0;
         }
 
         if let Some(_) = map::CDROM.contains(abs_addr) {
@@ -212,26 +218,38 @@ impl Interconnect {
         let major = (offset & 0x70) >> 4;
         let minor = offset & 0xf;
 
-        // Per−channel registers
-        match major {
-            0...6 => {
-                let port = Port::from_index(major);
-                let channel = self.dma.channel_mut(port);
-                match minor {
-                    0 => channel.set_base(val),
-                    4 => channel.set_block_control(val),
-                    8 => channel.set_control(val),
-                    _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
+        let active_port = {
+            // Per−channel registers
+            match major {
+                0...6 => {
+                    let port = Port::from_index(major);
+                    let channel = self.dma.channel_mut(port);
+                    match minor {
+                        0 => channel.set_base(val),
+                        4 => channel.set_block_control(val),
+                        8 => channel.set_control(val),
+                        _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
+                    }
+                    if channel.active() {
+                        Some(port)
+                    } else {
+                        None
+                    }
                 }
-            }
-            7 => {
-                match minor {
-                    0 => self.dma.set_control(val),
-                    4 => self.dma.set_interrupt(val),
-                    _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+                7 => {
+                    match minor {
+                        0 => self.dma.set_control(val),
+                        4 => self.dma.set_interrupt(val),
+                        _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+                    }
+                    None
                 }
+                _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
             }
-            _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
+        };
+
+        if let Some(port) = active_port {
+            self.do_dma(port);
         }
     }
 
@@ -256,6 +274,109 @@ impl Interconnect {
             }
             _ => panic!("unhandled DMA access 0x{:x}", offset)
         }
+    }
+
+    /// Execute DMA transfer for a port
+    fn do_dma(&mut self, port: Port) {
+        // DMA transfer has been started, for now let's
+        // process everything in one pass (i.e. no chopping or priority handling)
+        match self.dma.channel(port).sync() {
+            Sync::LinkedList => self.do_dma_linked_list(port),
+            _ => self.do_dma_block(port)
+        }
+    }
+
+    /// Emulate DMA transfer for linked list synchronization mode.
+    fn do_dma_linked_list(&mut self, port: Port) {
+        let channel = self.dma.channel_mut(port);
+
+        let mut addr = channel.base() & 0x1ffffc;
+
+        if channel.direction() == Direction::ToRam {
+            panic!("Invalid DMA direction for linked list mode");
+        }
+
+        // I don’t know if the DMA even supports linked list mode
+        // for anything besides the GPU
+        if port != Port::Gpu {
+            panic!("Attempted linked list DMA on port {}", port as u8);
+        }
+
+        loop {
+            // In linked list mode, each entry starts with a
+
+            // ”header” word. The high byte contains the number
+            // of words in the ”packet” (not counting the header word )
+            let header = self.ram.load::<Word>(addr);
+
+            let mut remsz = header >> 24;
+
+            while remsz > 0 {
+                addr = (addr + 4) & 0x1ffffc;
+                let command = self.ram.load::<Word>(addr);
+                println!("GPU command 0x{:08x}", command);
+                remsz -= 1;
+            }
+
+            // The end−of−table marker is usually 0xffffff but mednafen only checks for the MSB so
+            // maybe that's  what he hardware does? Since this bit is not part of any valid address
+            // it makes some sense.  I’ll have to test that at some point . . .
+            if header & 0x800000 != 0 {
+                break;
+            }
+            addr = header & 0x1ffffc;
+        }
+        channel.done();
+    }
+
+    fn do_dma_block(&mut self, port: Port) {
+        let channel = self.dma.channel_mut(port);
+
+        // Move to channel
+        let increment = match channel.step() {
+            Step::Increment => 4,
+            Step::Decrement => -4i32 as u32,
+        };
+
+        let mut addr = channel.base();
+
+        // Transfer size in words
+        let mut remsz = match channel.transfer_size() {
+            Some(n) => n,
+            // Shouldn't happen since we shouldn't be reaching this
+            // code in linked list mode
+            None => panic!("Couldn't figure out DMA block transfer size")
+        };
+
+        while remsz > 0 {
+            // Not sure what happens if address is
+            // bogus... Mednafen just masks addr this way, maybe
+            // that’s how the hardware behaves (i.e. the RAM
+            // address wraps and the two LSB are ignored, seems
+            // reasonable enough
+            let cur_addr = addr & 0x1ffffc;
+
+            match channel.direction() {
+                Direction::FromRam => panic!("Unhandled DMA direction"),
+                Direction::ToRam => {
+                    let src_word = match port {
+                        Port::Otc => match remsz {
+                            // Last entry contains the end
+                            // of table marker
+                            1 => 0xffffff,
+                            // Pointer to the previous entry
+                            _ => addr.wrapping_sub(4) & 0x1fffff,
+                        }
+                        _ => panic!("Unhandled DMA source port {}", port as u8)
+                    };
+
+                    self.ram.store::<Word>(cur_addr, src_word);
+                }
+            }
+            addr = addr.wrapping_add(increment);
+            remsz -= 1;
+        }
+        channel.done();
     }
 }
 

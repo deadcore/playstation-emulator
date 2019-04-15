@@ -104,7 +104,7 @@ impl Cpu {
         // instruction
         self.load.reset();
 
-        // If the last instruction was a branch then we’re in the // delay slot
+        // If the last instruction was a branch then we're in the // delay slot
         self.load.set_delay_slot(self.load.branch());
         self.load.set_branch(false);
 
@@ -112,9 +112,10 @@ impl Cpu {
 
         debug!("0x{:08x}: {}", self.registers.pc(), operation.gnu());
 
-        match operation.perform(&mut self.registers, &mut self.interconnect, &mut self.load) {
-            Some(exception) => self.enter_exception(exception),
-            None => {}
+        let maybe_exception = operation.perform(&mut self.registers, &mut self.interconnect, &mut self.load);
+
+        if let Some(exception) = maybe_exception {
+            self.enter_exception(exception)
         }
 
         self.registers.swap_registers();

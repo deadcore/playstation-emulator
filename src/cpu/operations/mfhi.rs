@@ -10,7 +10,7 @@ use crate::instruction::Instruction;
 /// mfhi $25
 ///
 /// Like MFLO it should be able to stall if the operation has not yet finished
-/// but we’ll implement that later:
+/// but we'll implement that later:
 pub struct Mfhi {
     instruction: Instruction
 }

@@ -5,14 +5,14 @@ use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We’ve seen that divisions store their results in the HI and LO registers but we don’t know how
+/// We've seen that divisions store their results in the HI and LO registers but we don't know how
 /// we access those yet. Unsurprisingly the next unhandled instruction does just that: 0x00001812
 /// encodes “move from LO" (MFLO):
 ///
 /// mflo $3
 ///
 /// This instruction simply moves the contents of LO in a general purpose register. This instruction
-/// would also stall if the division was not yet done but we’ll implement that later:
+/// would also stall if the division was not yet done but we'll implement that later:
 pub struct Mflo {
     instruction: Instruction
 }

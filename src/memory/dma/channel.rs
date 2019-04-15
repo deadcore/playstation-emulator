@@ -1,5 +1,4 @@
 use crate::memory::dma::direction::Direction;
-use crate::memory::dma::port::Port;
 use crate::memory::dma::step::Step;
 use crate::memory::dma::sync::Sync;
 
@@ -118,5 +117,53 @@ impl Channel {
     pub fn set_block_control(&mut self, val: u32) {
         self.block_size = val as u16;
         self.block_count = (val >> 16) as u16;
+    }
+
+    pub fn active(&self) -> bool {
+        // In manual sync mode the CPU must set the ”trigger” bit
+        // to start the transfer .
+        let trigger = match self.sync {
+            Sync::Manual => self.trigger,
+            _ => true,
+        };
+
+        self.enable && trigger
+    }
+
+    pub fn direction(&self) -> Direction {
+        self.direction
+    }
+
+    pub fn step(&self) -> Step {
+        self.step
+    }
+
+    pub fn sync(&self) -> Sync {
+        self.sync
+    }
+
+    /// Return the DMA transfer size in bytes or None for linked
+    /// list mode.
+    pub fn transfer_size(&self) -> Option<u32> {
+        let bs = self.block_size as u32;
+        let bc = self.block_count as u32;
+
+        match self.sync {
+            // For manual mode only the block size is used
+            Sync::Manual => Some(bs),
+            // In DMA request mode we must transfer ‘bc ‘ blocks
+            Sync::Request => Some(bc * bs),
+            // In linked list mode the size is not known ahead of
+            // time: we stop when we encounter the ”end of list”
+            // marker (0xffffff)
+            Sync::LinkedList => None,
+        }
+    }
+    /// Set the channel status to ”completed” state
+    pub fn done(&mut self) {
+        self.enable = false;
+        self.trigger = false;
+        // XXX Need to set the correct value for the other fields
+        // (in particular interrupts)
     }
 }

@@ -9,7 +9,7 @@ use crate::instruction::Instruction;
 ///
 /// and $4, $2, $1
 ///
-/// We’ve already implemented OR so we can reuse the code, only changing the
+/// We've already implemented OR so we can reuse the code, only changing the
 /// operator:
 pub struct And {
     instruction: Instruction

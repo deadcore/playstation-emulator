@@ -19,13 +19,13 @@ impl Lb {
 }
 
 /// The next unhandled instruction is 0x81efe288 which encodes “load byte" (LB). As you can guess
-/// it’s like LW except that it only loads 8bits from the memory:
+/// it's like LW except that it only loads 8bits from the memory:
 ///
 /// lb $15, −7544($15)
 ///
 /// Since the general purpose registers are always 32bit LB only loads the low 8bits of the register.
-/// The byte is treated like a signed value so it’s sign extended to the full 32bits. Of course like
-/// LW there’s a load delay of one instruction. We can implement it like this14:
+/// The byte is treated like a signed value so it's sign extended to the full 32bits. Of course like
+/// LW there's a load delay of one instruction. We can implement it like this14:
 impl Operation for Lb {
     fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
         let i = self.instruction.imm_se();

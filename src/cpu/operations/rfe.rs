@@ -14,9 +14,9 @@ use crate::instruction::Instruction;
 /// right. This effectively undoes the opposite shift done when entering the handler and therefore
 /// puts the CPU back in the mode it was when the exception triggered (unless SR itself has been
 /// modified in the handler).
-/// It does not reset the PC however, it’s up to the BIOS to fetch the address in EPC, increment it
+/// It does not reset the PC however, it's up to the BIOS to fetch the address in EPC, increment it
 /// by 4 to point at the next instruction and jump to it. The RFE instruction is typically in the
-/// final jump delay slot (and that’s exactly what the Playstation BIOS handler does in this case).
+/// final jump delay slot (and that's exactly what the Playstation BIOS handler does in this case).
 pub struct Rfe {
     instruction: Instruction
 }

@@ -23,10 +23,10 @@ use crate::instruction::{Instruction, RegisterIndex};
 ///   bgezal $4 , +12
 ///
 /// In order to figure out what to do exactly we need to look at bits 16 and 20 in the instruction:
-///  * If bit 16 is set then the instruction is BGEZ, otherwise it’s BLTZ.
+///  * If bit 16 is set then the instruction is BGEZ, otherwise it's BLTZ.
 ///  * If bit 20 is set then the return address is linked in $ra.
 ///
-/// Here’s how it can be implemented:
+/// Here's how it can be implemented:
 pub struct Bxx {
     instruction: Instruction
 }
