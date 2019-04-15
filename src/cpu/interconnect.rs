@@ -314,7 +314,7 @@ impl Interconnect {
             while remsz > 0 {
                 addr = (addr + 4) & 0x1ffffc;
                 let command = self.ram.load::<Word>(addr);
-                println!("GPU command 0x{:08x}", command);
+                info!("GPU command 0x{:08x}", command);
                 remsz -= 1;
             }
 
