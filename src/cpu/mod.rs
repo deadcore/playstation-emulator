@@ -49,6 +49,7 @@ use crate::cpu::operations::sltu::Sltu;
 use crate::cpu::operations::sra::Sra;
 use crate::cpu::operations::srl::Srl;
 use crate::cpu::operations::srlv::Srlv;
+use crate::cpu::operations::sub::Sub;
 use crate::cpu::operations::subu::Subu;
 use crate::cpu::operations::sw::*;
 use crate::cpu::operations::syscall::Syscall;
@@ -149,6 +150,7 @@ impl Cpu {
             0b001011 => Box::new(Sltiu::new(instruction)),
             0b100101 => Box::new(Lhu::new(instruction)),
             0b100001 => Box::new(Lh::new(instruction)),
+            0b100010 => Box::new(Sub::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
