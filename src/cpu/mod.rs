@@ -32,6 +32,7 @@ use crate::cpu::operations::mflo::Mflo;
 use crate::cpu::operations::mtc0::*;
 use crate::cpu::operations::mthi::Mtlo;
 use crate::cpu::operations::mtlo::Mthi;
+use crate::cpu::operations::multu::Multu;
 use crate::cpu::operations::nor::Nor;
 use crate::cpu::operations::Operation;
 use crate::cpu::operations::or::*;
@@ -175,6 +176,7 @@ impl Cpu {
             0b010001 => Box::new(Mthi::new(instruction)),
             0b000100 => Box::new(Sllv::new(instruction)),
             0b100110 => Box::new(Xor::new(instruction)),
+            0b011001 => Box::new(Multu::new(instruction)),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
