@@ -31,7 +31,7 @@ impl Operation for Jarl {
 
         let ra = registers.next_pc();
 
-        // Store return address in ‘d‘
+        // Store return address in 'd'
         registers.set_reg(d, ra);
 
         registers.set_next_pc(registers.reg(s));

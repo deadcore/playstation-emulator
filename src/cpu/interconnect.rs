@@ -218,8 +218,10 @@ impl Interconnect {
                 let port = Port::from_index(major);
                 let channel = self.dma.channel_mut(port);
                 match minor {
+                    0 => channel.set_base(val),
+                    4 => channel.set_block_control(val),
                     8 => channel.set_control(val),
-                    _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+                    _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
                 }
             }
             7 => {
@@ -229,7 +231,7 @@ impl Interconnect {
                     _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
                 }
             }
-            _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+            _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
         }
     }
 

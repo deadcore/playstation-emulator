@@ -91,7 +91,7 @@ impl Cpu {
         let instruction = Instruction(self.interconnect.load::<Word>(pc));
 
         // Save the address of the current instruction to save in
-        // ‘EPC‘ in case of an exception.
+        // 'EPC' in case of an exception.
         self.registers.set_current_pc(pc);
 
         self.registers.set_pc(self.registers.next_pc());
@@ -193,7 +193,7 @@ impl Cpu {
     fn enter_exception(&mut self, cause: Exception) {
         info!("Exception encountered");
 
-        // Exception handler address depends on the ‘BEV‘ bit:
+        // Exception handler address depends on the 'BEV' bit:
         let handler = match self.registers.sr() & (1 << 22) != 0 {
             true => 0xbfc00180,
             false => 0x80000080,
@@ -223,7 +223,7 @@ impl Cpu {
 
         self.registers.set_cause(register_cause);
 
-        // Save current instruction address in ‘EPC‘
+        // Save current instruction address in 'EPC'
         self.registers.set_epc(self.registers.current_pc());
 
         if self.load.delay_slot() {

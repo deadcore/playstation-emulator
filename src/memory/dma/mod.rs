@@ -17,7 +17,7 @@ pub struct Dma {
     channel_irq_en: u8,
     /// IRQ flags for individual channels
     channel_irq_flags: u8,
-    /// When set the interrupt is active unconditionally (even if /// ‘irqen‘ is false)
+    /// When set the interrupt is active unconditionally (even if /// 'irqen' is false)
     force_irq: bool,
 
     /// Bits know /// what them /// back

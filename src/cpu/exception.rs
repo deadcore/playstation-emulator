@@ -1,4 +1,4 @@
-/// Exception types (as stored in the ‘CAUSE‘ register)
+/// Exception types (as stored in the 'CAUSE' register)
 pub enum Exception {
     /// Interrupt Request
     Interrupt = 0x0,
