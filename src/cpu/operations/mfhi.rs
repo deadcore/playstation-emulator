@@ -24,12 +24,12 @@ impl Mfhi {
 }
 
 impl Operation for Mfhi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let d = self.instruction.d();
         let hi = registers.hi();
 
         registers.set_reg(d, hi);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

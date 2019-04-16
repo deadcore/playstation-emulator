@@ -27,7 +27,7 @@ impl Lb {
 /// The byte is treated like a signed value so it's sign extended to the full 32bits. Of course like
 /// LW there's a load delay of one instruction. We can implement it like this14:
 impl Operation for Lb {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -37,7 +37,7 @@ impl Operation for Lb {
         let v = interconnect.load::<Byte>(addr) as i8;
 
         load.set(t, v as u32);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

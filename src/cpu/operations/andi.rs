@@ -23,14 +23,14 @@ impl Andi {
 }
 
 impl Operation for Andi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm();
         let t = self.instruction.t();
         let s = self.instruction.s();
         let v = registers.reg(s) & i;
 
         registers.set_reg(t, v);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

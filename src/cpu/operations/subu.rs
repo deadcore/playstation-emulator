@@ -23,7 +23,7 @@ impl Subu {
 }
 
 impl Operation for Subu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
         let d = self.instruction.d();
@@ -32,7 +32,7 @@ impl Operation for Subu {
 
         registers.set_reg(d, v);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

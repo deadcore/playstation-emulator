@@ -21,7 +21,7 @@ impl Addi {
 }
 
 impl Operation for Addi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se() as i32;
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -31,9 +31,9 @@ impl Operation for Addi {
         match s.checked_add(i) {
             Some(v) => {
                 registers.set_reg(t, v as u32);
-                None
+                Ok(())
             },
-            None => Some(Exception::Overflow),
+            None => Err(Exception::Overflow),
         }
     }
 

@@ -22,11 +22,11 @@ impl Mtlo {
 }
 
 impl Operation for Mtlo {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let s = self.instruction.s();
 
         registers.set_lo(registers.reg(s));
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

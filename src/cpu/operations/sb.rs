@@ -20,11 +20,11 @@ impl Sb {
 }
 
 impl Operation for Sb {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         if registers.sr() & 0x10000 != 0 {
             // Cache is isolated , ignore write
             warn!("ignoring store while cache is isolated");
-            return None;
+            return Ok(());
         }
 
         let i = self.instruction.imm_se();
@@ -36,7 +36,7 @@ impl Operation for Sb {
 
         interconnect.store::<Byte>(addr, v);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

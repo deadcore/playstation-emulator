@@ -14,8 +14,8 @@ impl Syscall {
 }
 
 impl Operation for Syscall {
-    fn perform(&self, _: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
-        Some(Exception::SysCall)
+    fn perform(&self, _: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+        Err(Exception::SysCall)
     }
 
     fn gnu(&self) -> String {

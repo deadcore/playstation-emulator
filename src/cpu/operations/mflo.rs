@@ -26,12 +26,12 @@ impl Mflo {
 }
 
 impl Operation for Mflo {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let d = self.instruction.d();
         let lo = registers.lo();
 
         registers.set_reg(d, lo);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

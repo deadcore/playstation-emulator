@@ -23,7 +23,7 @@ impl Sltiu {
 }
 
 impl Operation for Sltiu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -32,7 +32,7 @@ impl Operation for Sltiu {
 
         registers.set_reg(t, v as u32);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

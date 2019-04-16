@@ -25,14 +25,14 @@ impl Lw {
 /// We can reuse the load32 method to fetch the data from memory:
 impl Operation for Lw {
     /// Load word
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
 
         if registers.sr() & 0x10000 != 0 { // Cache is isolated , ignore write
             warn!("Ignoring load while cache is isolated");
-            return None;
+            return Ok(())
         }
 
         let addr = registers.reg(s).wrapping_add(i);
@@ -40,9 +40,9 @@ impl Operation for Lw {
         if addr % 4 == 0 {
             let v = interconnect.load::<Word>(addr);
             load.set(t, v);
-            None
+            Ok(())
         } else {
-            Some(Exception::LoadAddressError)
+            Err(Exception::LoadAddressError)
         }
     }
 

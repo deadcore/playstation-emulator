@@ -24,7 +24,7 @@ impl Lhu {
 }
 
 impl Operation for Lhu {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -35,9 +35,9 @@ impl Operation for Lhu {
         if addr % 2 == 0 {
             let v = interconnect.load::<HalfWord>(addr);
             load.set(t, v as u32);
-            None
+            Ok(())
         } else {
-            Some(Exception::LoadAddressError)
+            Err(Exception::LoadAddressError)
         }
     }
 

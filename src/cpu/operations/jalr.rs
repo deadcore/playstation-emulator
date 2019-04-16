@@ -25,7 +25,7 @@ impl Jarl {
 }
 
 impl Operation for Jarl {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let d = self.instruction.d();
         let s = self.instruction.s();
 
@@ -35,7 +35,7 @@ impl Operation for Jarl {
         registers.set_reg(d, ra);
 
         registers.set_next_pc(registers.reg(s));
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

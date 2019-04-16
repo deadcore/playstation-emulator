@@ -25,7 +25,7 @@ impl Swl {
 
 impl Operation for Swl {
     /// Load word
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -50,7 +50,7 @@ impl Operation for Swl {
 
         interconnect.store::<Word>(addr, mem);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

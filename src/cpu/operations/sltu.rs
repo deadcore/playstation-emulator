@@ -26,7 +26,7 @@ impl Sltu {
 }
 
 impl Operation for Sltu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let d = self.instruction.d();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -35,7 +35,7 @@ impl Operation for Sltu {
 
         registers.set_reg(d, v as u32);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

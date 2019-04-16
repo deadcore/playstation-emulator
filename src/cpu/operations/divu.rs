@@ -24,7 +24,7 @@ impl Divu {
 }
 
 impl Operation for Divu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
 
@@ -39,7 +39,7 @@ impl Operation for Divu {
             registers.set_hi(n % d);
             registers.set_lo(n / d);
         }
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

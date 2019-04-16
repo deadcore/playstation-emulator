@@ -28,7 +28,7 @@ impl Srav {
 }
 
 impl Operation for Srav {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let d = self.instruction.d();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -37,7 +37,7 @@ impl Operation for Srav {
 
         registers.set_reg(d, v as u32);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

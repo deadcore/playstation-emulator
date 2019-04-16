@@ -24,7 +24,7 @@ impl Bltz {
 }
 
 impl Operation for Bltz {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
 
@@ -33,7 +33,7 @@ impl Operation for Bltz {
         if v <= 0 {
             registers.branch(i);
         }
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

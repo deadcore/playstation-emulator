@@ -24,7 +24,7 @@ impl Srlv {
 }
 
 impl Operation for Srlv {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let d = self.instruction.d();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -32,7 +32,7 @@ impl Operation for Srlv {
         let v = registers.reg(t) >> (registers.reg(s) & 0x1f);
 
         registers.set_reg(d, v);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

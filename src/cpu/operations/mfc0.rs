@@ -27,7 +27,7 @@ impl Mfc0 {
 }
 
 impl Operation for Mfc0 {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) -> Result<(), Exception> {
         let cpu_r = self.instruction.t();
         let cop_r = self.instruction.d().0;
 
@@ -40,7 +40,7 @@ impl Operation for Mfc0 {
 
         delay.set(cpu_r, v);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

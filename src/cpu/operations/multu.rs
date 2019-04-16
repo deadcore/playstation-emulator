@@ -24,7 +24,7 @@ impl Multu {
 }
 
 impl Operation for Multu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let s = self.instruction.s();
         let t = self.instruction.t();
 
@@ -35,7 +35,7 @@ impl Operation for Multu {
 
         registers.set_hi((v >> 32) as u32);
         registers.set_lo(v as u32);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

@@ -25,11 +25,11 @@ impl Jr {
 }
 
 impl Operation for Jr {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let s = self.instruction.s();
 
         registers.set_next_pc(registers.reg(s));
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

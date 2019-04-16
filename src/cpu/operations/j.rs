@@ -18,11 +18,11 @@ impl J {
 }
 
 impl Operation for J {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_jump();
 
         registers.set_next_pc((registers.pc() & 0xf0000000) | (i << 2));
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

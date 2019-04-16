@@ -60,7 +60,7 @@ pub mod swl;
 pub mod swr;
 
 pub trait Operation {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception>;
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception>;
 
     fn gnu(&self) -> String;
 }

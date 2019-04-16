@@ -20,7 +20,7 @@ impl Sw {
 }
 
 impl Operation for Sw {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -28,7 +28,7 @@ impl Operation for Sw {
         if registers.sr() & 0x10000 != 0 {
             // Cache is isolated , ignore write
             warn!("ignoring store while cache is isolated");
-            return None;
+            return Ok(())
         }
 
         let addr = registers.reg(s).wrapping_add(i);
@@ -37,9 +37,9 @@ impl Operation for Sw {
             let v = registers.reg(t);
 
             interconnect.store::<Word>(addr, v);
-            None
+            Ok(())
         } else {
-            Some(Exception::StoreAddressError)
+            Err(Exception::StoreAddressError)
         }
     }
 

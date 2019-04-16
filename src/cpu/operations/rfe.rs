@@ -30,7 +30,7 @@ impl Rfe {
 }
 
 impl Operation for Rfe {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         // There are other instructions with the same encoding but all
         // are virtual memory related and the Playstation doesnt't
         // implement them. Still, let's make sure we're not running
@@ -47,7 +47,7 @@ impl Operation for Rfe {
 
         registers.set_sr(sr);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

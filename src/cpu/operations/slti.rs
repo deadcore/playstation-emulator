@@ -24,7 +24,7 @@ impl Slti {
 }
 
 impl Operation for Slti {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se() as i32;
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -33,7 +33,7 @@ impl Operation for Slti {
 
         registers.set_reg(t, v as u32);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

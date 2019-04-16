@@ -25,7 +25,7 @@ impl Lbu {
 }
 
 impl Operation for Lbu {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -35,7 +35,7 @@ impl Operation for Lbu {
         let v = interconnect.load::<Byte>(addr);
 
         load.set(t, v as u32);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

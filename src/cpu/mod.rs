@@ -121,7 +121,7 @@ impl Cpu {
 
         let maybe_exception = operation.perform(&mut self.registers, &mut self.interconnect, &mut self.load);
 
-        if let Some(exception) = maybe_exception {
+        if let Err(exception) = maybe_exception {
             self.enter_exception(exception)
         }
 
@@ -206,7 +206,7 @@ impl Cpu {
     /// Update SR, CAUSE and EPC when an exception is
     /// triggered. Returns the address of the exception handler.
     fn enter_exception(&mut self, cause: Exception) {
-        info!("Exception encountered");
+        warn!("Exception encountered");
 
         // Exception handler address depends on the 'BEV' bit:
         let handler = match self.registers.sr() & (1 << 22) != 0 {

@@ -42,7 +42,7 @@ impl Bxx {
 impl Operation for Bxx {
     /// Various branch instructions: BGEZ, BLTZ, BGEZAL, BLTZAL.
     /// Bits 16 and 20 are used to figure out which one to use.
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
 
@@ -75,7 +75,7 @@ impl Operation for Bxx {
             }
             registers.branch(i);
         }
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

@@ -31,13 +31,13 @@ impl Jal {
 }
 
 impl Operation for Jal {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, delay: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, delay: &mut Delay) -> Result<(), Exception> {
         let ra = registers.next_pc();
 
         J::new(self.instruction).perform(registers, interconnect, delay);
 
         registers.set_reg(RegisterIndex(31), ra);
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

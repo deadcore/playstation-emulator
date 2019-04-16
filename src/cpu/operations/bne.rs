@@ -18,7 +18,7 @@ impl Bne {
 }
 
 impl Operation for Bne {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let s = self.instruction.s();
         let t = self.instruction.t();
@@ -26,7 +26,7 @@ impl Operation for Bne {
         if registers.reg(s) != registers.reg(t) {
             registers.branch(i);
         }
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {

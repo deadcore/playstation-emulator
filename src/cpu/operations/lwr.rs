@@ -23,7 +23,7 @@ impl Lwr {
 
 
 impl Operation for Lwr {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Option<Exception> {
+    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
         let i = self.instruction.imm_se();
         let t = self.instruction.t();
         let s = self.instruction.s();
@@ -50,7 +50,7 @@ impl Operation for Lwr {
 
         load.set(t, v);
 
-        None
+        Ok(())
     }
 
     fn gnu(&self) -> String {
