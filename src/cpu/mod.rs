@@ -206,7 +206,7 @@ impl Cpu {
     /// Update SR, CAUSE and EPC when an exception is
     /// triggered. Returns the address of the exception handler.
     fn enter_exception(&mut self, cause: Exception) {
-        warn!("Exception encountered");
+        warn!("Exception [{}] encountered", cause);
 
         // Exception handler address depends on the 'BEV' bit:
         let handler = match self.registers.sr() & (1 << 22) != 0 {

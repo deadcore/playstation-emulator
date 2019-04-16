@@ -168,7 +168,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::SPU.contains(abs_addr) {
-            warn!("SPU control: 0x{:x} <− 0x{:08x}", offset, val);
+            warn!("Unhandled writ: SPU control: 0x{:x} <− 0x{:08x}", offset, val);
             return;
         }
 
