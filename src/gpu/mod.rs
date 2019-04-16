@@ -72,7 +72,55 @@ pub struct Gpu {
     dma_direction: DmaDirection,
 
     rectangle_texture_x_flip: bool,
+
     rectangle_texture_y_flip: bool,
+
+    /// Texture window x mask (8 pixel steps)
+    texture_window_x_mask: u8,
+
+    /// Texture window y mask (8 pixel steps)
+    texture_window_y_mask: u8,
+
+    /// Texture window x offset (8 pixel steps)
+    texture_window_x_offset: u8,
+
+    /// Texture window y offset (8 pixel steps)
+    texture_window_y_offset: u8,
+
+    /// Left-most column of drawing area
+    drawing_area_left: u16,
+
+    /// Top-most line of drawing area
+    drawing_area_top: u16,
+
+    /// Right-most column of drawing area
+    drawing_area_right: u16,
+
+    /// Bottom-most line of drawing area
+    drawing_area_bottom: u16,
+
+    /// Horizontal drawing offset applied to all vertex
+    drawing_x_offset: i16,
+    /// Vertical drawing offset applied to all vertex
+    drawing_y_offset: i16,
+
+    /// First column of the display area in VRAM
+    display_vram_x_start: u16,
+
+    /// First line of the display area in VRAM
+    display_vram_y_start: u16,
+
+    /// Display output horizontal start relative to HSYNC
+    display_horiz_start: u16,
+
+    /// Display output horizontal end relative to HSYNC
+    display_horiz_end: u16,
+
+    /// Display output first line relative to VSYNC
+    display_line_start: u16,
+
+    /// Display output last line relative to VSYNC
+    display_line_end: u16,
 }
 
 impl Gpu {
@@ -98,6 +146,22 @@ impl Gpu {
             dma_direction: DmaDirection::Off,
             rectangle_texture_x_flip: false,
             rectangle_texture_y_flip: false,
+            texture_window_x_mask: 0,
+            texture_window_y_mask: 0,
+            texture_window_x_offset: 0,
+            texture_window_y_offset: 0,
+            drawing_area_left: 0,
+            drawing_area_top: 0,
+            drawing_area_right: 0,
+            drawing_area_bottom: 0,
+            drawing_x_offset: 0,
+            drawing_y_offset: 0,
+            display_vram_x_start: 0,
+            display_vram_y_start: 0,
+            display_horiz_start: 0,
+            display_horiz_end: 0,
+            display_line_start: 0,
+            display_line_end: 0,
         }
     }
 
@@ -107,7 +171,17 @@ impl Gpu {
 
         match opcode {
             0xe1 => self.gp0_draw_mode(val),
+            0x00 => (), // NOP
             _ => panic!("Unhandled GP0 command 0x{:08x}", val),
+        }
+    }
+
+    pub fn gp1(&mut self, val: u32) {
+        let opcode = (val >> 24) & 0xff;
+
+        match opcode {
+            0x00 => self.gp1_reset(),
+            _ => panic!("Unhandled GP1 command 0x{:08x}", val),
         }
     }
 
@@ -188,5 +262,44 @@ impl Gpu {
         r |= dma_request << 25;
 
         r
+    }
+
+    /// GP1(0x00): Soft Reset
+    fn gp1_reset(&mut self) {
+        self.interrupt = false;
+        self.page_base_x = 0;
+        self.page_base_y = 0;
+        self.semi_transparency = 0;
+        self.texture_depth = TextureDepth::T4Bit;
+        self.texture_window_x_mask = 0;
+        self.texture_window_y_mask = 0;
+        self.texture_window_x_offset = 0;
+        self.texture_window_y_offset = 0;
+        self.dithering = false;
+        self.draw_to_display = false;
+        self.texture_disable = false;
+        self.rectangle_texture_x_flip;
+        self.rectangle_texture_y_flip;
+        self.drawing_area_left = 0;
+        self.drawing_area_top = 0;
+        self.drawing_area_right = 0;
+        self.drawing_area_bottom = 0;
+        self.drawing_x_offset = 0;
+        self.drawing_y_offset = 0;
+        self.force_set_mask_bit = false;
+        self.preserve_masked_pixels = false;
+        self.dma_direction = DmaDirection::Off;
+        self.display_disabled = true;
+        self.display_vram_x_start = 0;
+        self.display_vram_y_start = 0;
+        self.hres = HorizontalRes::from_fields(0, 0);
+        self.vres = VerticalRes::Y240Lines;
+        self.vmode = VMode::Ntsc;
+        self.interlaced = true;
+        self.display_horiz_start = 0x200;
+        self.display_horiz_end = 0xc00;
+        self.display_line_start = 0x10;
+        self.display_line_end = 0x100;
+        self.display_depth = DisplayDepth::D15Bits;
     }
 }

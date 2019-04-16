@@ -39,7 +39,7 @@ impl Interconnect {
                 panic!("ScratchPad access through uncached memory");
             }
 
-            panic!("Unhandled SCRATCH_PAD load at address {:08x}", addr)
+            panic!("Unhandled SCRATCH_PAD load at address 0x{:08x}", addr)
         }
 
         if let Some(offset) = map::BIOS.contains(abs_addr) {
@@ -47,7 +47,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::IRQ_CONTROL.contains(abs_addr) {
-            warn!("IRQ control read {:x}", offset);
+            warn!("IRQ control read 0x{:x}", offset);
             return 0;
         }
 
@@ -68,7 +68,7 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
-            warn!("TIMERS control read {:x}", offset);
+            warn!("TIMERS control read 0x{:x}", offset);
             return 0;
         }
 
@@ -95,7 +95,7 @@ impl Interconnect {
         }
 
         if let Some(_) = map::RAM_SIZE.contains(abs_addr) {
-            panic!("Unhandled RAM_SIZE load at address {:08x}", addr)
+            panic!("Unhandled RAM_SIZE load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::MEM_CONTROL.contains(abs_addr) {
@@ -103,7 +103,7 @@ impl Interconnect {
                 panic!("Unhandled MEM_CONTROL access ({})", A::size());
             }
 
-            panic!("Unhandled MEM_CONTROL load at address {:08x}", addr)
+            panic!("Unhandled MEM_CONTROL load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::CACHE_CONTROL.contains(abs_addr) {
@@ -111,14 +111,14 @@ impl Interconnect {
                 panic!("Unhandled cache control access ({})", A::size());
             }
 
-            panic!("Unhandled CACHE_CONTROL load at address {:08x}", addr)
+            panic!("Unhandled CACHE_CONTROL load at address 0x{:08x}", addr)
         }
 
         if let Some(_) = map::EXPANSION_2.contains(abs_addr) {
-            panic!("Unhandled EXPANSION_2 load at address {:08x}", addr)
+            panic!("Unhandled EXPANSION_2 load at address 0x{:08x}", addr)
         }
 
-        panic!("unhandled load at address {:08x}", addr);
+        panic!("unhandled load at address 0x{:08x}", addr);
     }
 
     /// Interconnect: store `val` into `addr`
@@ -134,11 +134,11 @@ impl Interconnect {
                 panic!("ScratchPad access through uncached memory");
             }
 
-            panic!("Unhandled write to SCRATCH_PAD {:x}", offset);
+            panic!("Unhandled write to SCRATCH_PAD 0x{:x}", offset);
         }
 
         if let Some(offset) = map::IRQ_CONTROL.contains(abs_addr) {
-            warn!("Unhandled IRQ control: {:x} <− {:08x}", offset, val);
+            warn!("Unhandled IRQ control: 0x{:x} <− 0x{:08x}", offset, val);
             return;
         }
 
@@ -149,30 +149,31 @@ impl Interconnect {
         if let Some(offset) = map::GPU.contains(abs_addr) {
             return match offset {
                 0 => self.gpu.gp0(val),
-                _ => panic!("GPU write {}: {:08x}", offset, val),
+                4 => self.gpu.gp1(val),
+                _ => panic!("GPU write {}: 0x{:08x}", offset, val),
             }
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
-            warn!("Unhandled TIMERS control: {:x} <− {:08x}", offset, val);
+            warn!("Unhandled TIMERS control: 0x{:x} <− 0x{:08x}", offset, val);
             return;
         }
 
         if let Some(offset) = map::CDROM.contains(abs_addr) {
-            panic!("Unhandled write to CDROM {:x}", offset);
+            panic!("Unhandled write to CDROM 0x{:x}", offset);
         }
 
         if let Some(offset) = map::MDEC.contains(abs_addr) {
-            panic!("Unhandled write to MDEC {:x}", offset);
+            panic!("Unhandled write to MDEC 0x{:x}", offset);
         }
 
         if let Some(offset) = map::SPU.contains(abs_addr) {
-            warn!("SPU control: {:x} <− {:08x}", offset, val);
+            warn!("SPU control: 0x{:x} <− 0x{:08x}", offset, val);
             return;
         }
 
         if let Some(offset) = map::PAD_MEMCARD.contains(abs_addr) {
-            panic!("Unhandled write to PAD_MEMCARD {:x}", offset);
+            panic!("Unhandled write to PAD_MEMCARD 0x{:x}", offset);
         }
 
         if let Some(_) = map::CACHE_CONTROL.contains(abs_addr) {
@@ -200,7 +201,7 @@ impl Interconnect {
                         panic!("Bad expansion 2 base address: 0x{:08x}", val);
                     },
                 _ =>
-                    warn!("Unhandled write to MEM_CONTROL register {:x}: 0x{:08x}", offset, val),
+                    warn!("Unhandled write to MEM_CONTROL register 0x{:x}: 0x{:08x}", offset, val),
             }
             return;
         }
@@ -216,7 +217,7 @@ impl Interconnect {
             return;
         }
 
-        panic!("unhandled store into address 0x{:08x}: {:08x}", addr, val);
+        panic!("unhandled store into address 0x{:08x}: 0x{:08x}", addr, val);
     }
 
     fn set_dma_reg(&mut self, offset: u32, val: u32) {
@@ -233,7 +234,7 @@ impl Interconnect {
                         0 => channel.set_base(val),
                         4 => channel.set_block_control(val),
                         8 => channel.set_control(val),
-                        _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
+                        _ => panic!("Unhandled DMA write 0x{:x}: 0x{:08x}", offset, val)
                     }
                     if channel.active() {
                         Some(port)
@@ -245,11 +246,11 @@ impl Interconnect {
                     match minor {
                         0 => self.dma.set_control(val),
                         4 => self.dma.set_interrupt(val),
-                        _ => panic!("Unhandled DMA write {:x}: {:08x}", offset, val)
+                        _ => panic!("Unhandled DMA write 0x{:x}: 0x{:08x}", offset, val)
                     }
                     None
                 }
-                _ => panic!("Unhandled DMA write {:x}: 0x{:08x}", offset, val)
+                _ => panic!("Unhandled DMA write 0x{:x}: 0x{:08x}", offset, val)
             }
         };
 
@@ -365,7 +366,7 @@ impl Interconnect {
                 Direction::FromRam => {
                     let src_word = self.ram.load::<Word>(cur_addr);
                     match port {
-                        Port::Gpu => warn!("GPU data {:08x}", src_word),
+                        Port::Gpu => warn!("GPU data 0x{:08x}", src_word),
                         _ => panic!("Unhandled DMA destination port {}", port as u8)
                     }
                 }

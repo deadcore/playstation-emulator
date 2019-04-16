@@ -28,7 +28,7 @@ impl Operation for Mtc0 {
         match cop_r {
             3 | 5 | 6 | 7 | 9 | 11 => // Breakpoints registers
                 if v != 0 {
-                    panic!("Unhandled write to cop0r{}: {:08x}", cop_r, v)
+                    panic!("Unhandled write to cop0r{}: 0x{:08x}", cop_r, v)
                 },
             12 => registers.set_sr(v),
             13 => // Cause register
