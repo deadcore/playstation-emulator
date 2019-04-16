@@ -7,6 +7,7 @@ use std::path::Path;
 use rust_playstation_emulator::bios::Bios;
 use rust_playstation_emulator::cpu::Cpu;
 use rust_playstation_emulator::cpu::interconnect::Interconnect;
+use rust_playstation_emulator::gpu::Gpu;
 use rust_playstation_emulator::memory::ram::Ram;
 
 fn main() {
@@ -23,9 +24,11 @@ fn main() {
 
     let bios = Bios::new(&Path::new(&bios_filepath)).unwrap();
     let ram = Ram::new();
+    let gpu = Gpu::new();
     let inter = Interconnect::new(
         bios,
         ram,
+        gpu,
     );
     let mut cpu = Cpu::new(inter);
 

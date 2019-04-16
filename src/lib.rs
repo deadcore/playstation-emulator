@@ -9,3 +9,4 @@ pub mod cpu;
 pub mod bios;
 pub mod debugger;
 pub mod memory;
+pub mod gpu;

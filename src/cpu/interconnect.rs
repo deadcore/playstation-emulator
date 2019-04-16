@@ -1,4 +1,5 @@
 use crate::bios::Bios;
+use crate::gpu::Gpu;
 use crate::memory::{Addressable, Word};
 use crate::memory::dma::direction::Direction;
 use crate::memory::dma::Dma;
@@ -13,13 +14,15 @@ pub struct Interconnect {
     bios: Bios,
     ram: Ram,
     dma: Dma,
+    gpu: Gpu
 }
 
 impl Interconnect {
-    pub fn new(bios: Bios, ram: Ram) -> Interconnect {
+    pub fn new(bios: Bios, ram: Ram, gpu: Gpu) -> Interconnect {
         Interconnect {
             bios,
             ram,
+            gpu,
             dma: Dma::new(),
         }
     }
@@ -144,8 +147,10 @@ impl Interconnect {
         }
 
         if let Some(offset) = map::GPU.contains(abs_addr) {
-            warn!("GPU write {}: {:08x}", offset, val);
-            return;
+            return match offset {
+                0 => self.gpu.gp0(val),
+                _ => panic!("GPU write {}: {:08x}", offset, val),
+            }
         }
 
         if let Some(offset) = map::TIMERS.contains(abs_addr) {
