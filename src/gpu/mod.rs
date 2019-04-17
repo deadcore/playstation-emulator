@@ -182,8 +182,19 @@ impl Gpu {
         match opcode {
             0x00 => self.gp1_reset(),
             0x08 => self.gp1_display_mode(val),
+            0x04 => self.gp1_dma_direction(val),
             _ => panic!("Unhandled GP1 command 0x{:08x}", val),
         }
+    }
+
+    fn gp1_dma_direction(&mut self, val: u32) {
+        self.dma_direction = match val & 3 {
+            0 => DmaDirection::Off,
+            1 => DmaDirection::Fifo,
+            2 => DmaDirection::CpuToGp0,
+            3 => DmaDirection::VRamToCpu,
+            _ => unreachable!(),
+        };
     }
 
     /// GP1(0x80): Display Mode
