@@ -320,7 +320,7 @@ impl Interconnect {
             while remsz > 0 {
                 addr = (addr + 4) & 0x1ffffc;
                 let command = self.ram.load::<Word>(addr);
-                warn!("GPU command 0x{:08x}", command);
+                debug!("GPU command 0x{:08x}", command);
                 remsz -= 1;
             }
 
@@ -366,7 +366,7 @@ impl Interconnect {
                 Direction::FromRam => {
                     let src_word = self.ram.load::<Word>(cur_addr);
                     match port {
-                        Port::Gpu => warn!("GPU data 0x{:08x}", src_word),
+                        Port::Gpu => self.gpu.gp0(src_word),
                         _ => panic!("Unhandled DMA destination port {}", port as u8)
                     }
                 }

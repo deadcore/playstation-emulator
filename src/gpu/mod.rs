@@ -128,9 +128,12 @@ pub struct Gpu {
     /// Buffer containing the current GP0 command
     gp0_command: CommandBuffer,
     /// Remaining words for the current GP0 command
-    gp0_command_remaining: u32,
+    gp0_words_remaining: u32,
     /// Pointer to the method implementing the current GP) command
     gp0_command_method: fn(&mut Gpu),
+
+    /// Current mode of the GP0 register
+    gp0_mode: Gp0Mode,
 }
 
 impl Gpu {
@@ -173,33 +176,49 @@ impl Gpu {
             display_line_start: 0,
             display_line_end: 0,
             gp0_command: CommandBuffer::new(),
-            gp0_command_remaining: 0,
+            gp0_words_remaining: 0,
             gp0_command_method: Gpu::gp0_nop,
+            gp0_mode: Gp0Mode::Command,
         }
     }
 
     /// Handle writes to the GP0 command register
     pub fn gp0(&mut self, val: u32) {
-        if self.gp0_command_remaining == 0 {
+        if self.gp0_words_remaining == 0 {
+            // We start a new GP0 command
             let opcode = (val >> 24) & 0xff;
 
             let (len, method) = match opcode {
                 0x00 => (1, Gpu::gp0_nop as fn(&mut Gpu)),
                 0x01 => (1, Gpu::gp0_clear_cache as fn(&mut Gpu)),
                 0xe1 => (1, Gpu::gp0_draw_mode as fn(&mut Gpu)),
+                0xa0 => (3, Gpu::gp0_image_load as fn(&mut Gpu)),
                 _ => panic!("Unhandled GP0 command 0x{:08x}", val),
             };
 
-            self.gp0_command_remaining = len;
+            self.gp0_words_remaining = len;
             self.gp0_command_method = method;
             self.gp0_command.clear();
         }
 
-        self.gp0_command.push_word(val);
-        self.gp0_command_remaining -= 1;
-        if self.gp0_command_remaining == 0 {
-            // We have all the parameters, we can run the command
-            (self.gp0_command_method)(self);
+        self.gp0_words_remaining -= 1;
+
+        match self.gp0_mode {
+            Gp0Mode::Command => {
+                self.gp0_command.push_word(val);
+
+                if self.gp0_words_remaining == 0 {
+                    // We have all the parameters, we can run the command
+                    (self.gp0_command_method)(self);
+                }
+            }
+            Gp0Mode::ImageLoad => {
+                // XXX Should copy pixel data to VRAM
+                if self.gp0_words_remaining == 0 {
+                    // Load done, switch back to command mode
+                    self.gp0_mode = Gp0Mode::Command;
+                }
+            }
         }
     }
 
@@ -224,6 +243,26 @@ impl Gpu {
     }
 
     fn gp0_nop(&mut self) {}
+
+    /// GP0(0XA0): Image Load
+    fn gp0_image_load(&mut self) {
+        // Parameter 2 contains the image resolution
+        let res = self.gp0_command[2];
+        let width = res & 0xffff;
+        let height = res >> 16;
+
+        // Size of the image in 16bit pixels
+        let imgsize = width * height;
+
+        // If we have an odd number of pixels we must round up
+        // since we transfer 32bits at a time. There’ll be 16bits // of padding in the last word.
+        let imgsize = (imgsize + 1) & !1;
+        // Store number of words expected for this image
+        self.gp0_words_remaining = imgsize / 2;
+
+        // Put the GP0 state machine in ImageLoad mode
+        self.gp0_mode = Gp0Mode::ImageLoad;
+    }
 
     /// GP1(0x07) : Display Vertical Range
     fn gp1_display_vertical_range(&mut self, val: u32) {
@@ -401,4 +440,12 @@ impl Gpu {
         self.display_line_end = 0x100;
         self.display_depth = DisplayDepth::D15Bits;
     }
+}
+
+/// Possible states for the GP0 command register
+enum Gp0Mode {
+    /// Default mode: handling commands
+    Command,
+    /// Loading an image into VRAM
+    ImageLoad,
 }
