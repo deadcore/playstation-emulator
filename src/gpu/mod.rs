@@ -1,3 +1,5 @@
+use crate::gpu::commandbuffer::CommandBuffer;
+
 use self::displaydepth::DisplayDepth;
 use self::dmadirection::DmaDirection;
 use self::field::Field;
@@ -11,6 +13,7 @@ pub mod resolution;
 pub mod vmode;
 pub mod displaydepth;
 pub mod dmadirection;
+pub mod commandbuffer;
 
 pub struct Gpu {
     /// Texture page base X coordinate (4 bits , 64 byte increment )
@@ -121,6 +124,13 @@ pub struct Gpu {
 
     /// Display output last line relative to VSYNC
     display_line_end: u16,
+
+    /// Buffer containing the current GP0 command
+    gp0_command: CommandBuffer,
+    /// Remaining words for the current GP0 command
+    gp0_command_remaining: u32,
+    /// Pointer to the method implementing the current GP) command
+    gp0_command_method: fn(&mut Gpu),
 }
 
 impl Gpu {
@@ -162,17 +172,34 @@ impl Gpu {
             display_horiz_end: 0,
             display_line_start: 0,
             display_line_end: 0,
+            gp0_command: CommandBuffer::new(),
+            gp0_command_remaining: 0,
+            gp0_command_method: Gpu::gp0_nop,
         }
     }
 
     /// Handle writes to the GP0 command register
     pub fn gp0(&mut self, val: u32) {
-        let opcode = (val >> 24) & 0xff;
+        if self.gp0_command_remaining == 0 {
+            let opcode = (val >> 24) & 0xff;
 
-        match opcode {
-            0xe1 => self.gp0_draw_mode(val),
-            0x00 => (), // NOP
-            _ => panic!("Unhandled GP0 command 0x{:08x}", val),
+            let (len, method) = match opcode {
+                0x00 => (1, Gpu::gp0_nop as fn(&mut Gpu)),
+                0x01 => (1, Gpu::gp0_clear_cache as fn(&mut Gpu)),
+                0xe1 => (1, Gpu::gp0_draw_mode as fn(&mut Gpu)),
+                _ => panic!("Unhandled GP0 command 0x{:08x}", val),
+            };
+
+            self.gp0_command_remaining = len;
+            self.gp0_command_method = method;
+            self.gp0_command.clear();
+        }
+
+        self.gp0_command.push_word(val);
+        self.gp0_command_remaining -= 1;
+        if self.gp0_command_remaining == 0 {
+            // We have all the parameters, we can run the command
+            (self.gp0_command_method)(self);
         }
     }
 
@@ -189,6 +216,14 @@ impl Gpu {
             _ => panic!("Unhandled GP1 command 0x{:08x}", val),
         }
     }
+
+    /// GP0(0x01) : Clear Cache
+    fn gp0_clear_cache(&mut self) {
+        // Not implemented
+        warn!("GP0(0x01): Clear Cache - Not Implemented")
+    }
+
+    fn gp0_nop(&mut self) {}
 
     /// GP1(0x07) : Display Vertical Range
     fn gp1_display_vertical_range(&mut self, val: u32) {
@@ -248,7 +283,9 @@ impl Gpu {
     }
 
     /// GP0(0xE1) command
-    fn gp0_draw_mode(&mut self, val: u32) {
+    fn gp0_draw_mode(&mut self) {
+        let val = self.gp0_command[0];
+
         self.page_base_x = (val & 0xf) as u8;
         self.page_base_y = ((val >> 4) & 1) as u8;
         self.semi_transparency = ((val >> 5) & 3) as u8;
