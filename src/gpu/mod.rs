@@ -188,11 +188,12 @@ impl Gpu {
             // We start a new GP0 command
             let opcode = (val >> 24) & 0xff;
 
-            let (len, method) = match opcode {
-                0x00 => (1, Gpu::gp0_nop as fn(&mut Gpu)),
-                0x01 => (1, Gpu::gp0_clear_cache as fn(&mut Gpu)),
-                0xe1 => (1, Gpu::gp0_draw_mode as fn(&mut Gpu)),
-                0xa0 => (3, Gpu::gp0_image_load as fn(&mut Gpu)),
+            let (len, method): (u32, fn(&mut Gpu)) = match opcode {
+                0x00 => (1, Gpu::gp0_nop),
+                0x01 => (1, Gpu::gp0_clear_cache),
+                0xe1 => (1, Gpu::gp0_draw_mode),
+                0xa0 => (3, Gpu::gp0_image_load),
+                0xc0 => (3, Gpu::gp0_image_store),
                 _ => panic!("Unhandled GP0 command 0x{:08x}", val),
             };
 
@@ -263,6 +264,15 @@ impl Gpu {
 
         // Put the GP0 state machine in ImageLoad mode
         self.gp0_mode = Gp0Mode::ImageLoad;
+    }
+
+    /// GP0(0xC0): Image Store
+    fn gp0_image_store(&mut self) {
+        // Parameter 2 contains the image resolution
+        let res = self.gp0_command[2];
+        let width = res & 0xffff;
+        let height = res >> 16;
+        warn!("Unhandled image store: {}x{}", width, height);
     }
 
     /// GP1(0x03) : Display Enable
