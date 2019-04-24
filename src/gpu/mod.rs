@@ -194,6 +194,9 @@ impl Gpu {
                 0xe1 => (1, Gpu::gp0_draw_mode),
                 0xa0 => (3, Gpu::gp0_image_load),
                 0xc0 => (3, Gpu::gp0_image_store),
+                0x38 => (8, Gpu::gp0_quad_shaded_opaque),
+                0x30 => (6, Gpu::gp0_triangle_shaded_opaque),
+                0x2c => (9, Gpu::gp0_quad_texture_blend_opaque),
                 _ => panic!("Unhandled GP0 command 0x{:08x}", val),
             };
 
@@ -234,6 +237,8 @@ impl Gpu {
             0x06 => self.gp1_display_horizontal_range(val),
             0x07 => self.gp1_display_vertical_range(val),
             0x03 => self.gp1_display_enable(val),
+            0x02 => self.gp1_acknowledge_irg(),
+            0x01 => self.gp1_reset_command_buffer(),
             _ => panic!("Unhandled GP1 command 0x{:08x}", val),
         }
     }
@@ -245,6 +250,21 @@ impl Gpu {
     }
 
     fn gp0_nop(&mut self) {}
+
+    /// GP0(0x38): Shaded Opaque Quadrilateral
+    fn gp0_quad_shaded_opaque(&mut self) {
+        warn!("[Unhandled] 0x38 - Draw quad shaded");
+    }
+
+    /// GP0(0x30) : Shaded Opaque Triangle
+    fn gp0_triangle_shaded_opaque(&mut self) {
+        warn!("[Unhandled] 0x30 - Draw triangle shaded");
+    }
+
+    /// GP0(0x2c): Textured Opaque Quadrilateral
+    fn gp0_quad_texture_blend_opaque(&mut self) {
+        warn!("[Unhandled] 0x2c - Draw quad texture blending");
+    }
 
     /// GP0(0XA0): Image Load
     fn gp0_image_load(&mut self) {
@@ -273,6 +293,19 @@ impl Gpu {
         let width = res & 0xffff;
         let height = res >> 16;
         warn!("Unhandled image store: {}x{}", width, height);
+    }
+
+    /// GP1(0x01): Reset Command Buffer
+    fn gp1_reset_command_buffer(&mut self) {
+        self.gp0_command.clear();
+        self.gp0_words_remaining = 0;
+        self.gp0_mode = Gp0Mode::Command;
+        // XXX should also clear the command FIFO when we implement it
+    }
+
+    /// GP1(0x02) Acknowledge Interrupt
+    fn gp1_acknowledge_irg(&mut self) {
+        self.interrupt = false;
     }
 
     /// GP1(0x03) : Display Enable
