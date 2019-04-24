@@ -232,6 +232,7 @@ impl Gpu {
             0x05 => self.gp1_display_vram_start(val),
             0x06 => self.gp1_display_horizontal_range(val),
             0x07 => self.gp1_display_vertical_range(val),
+            0x03 => self.gp1_display_enable(val),
             _ => panic!("Unhandled GP1 command 0x{:08x}", val),
         }
     }
@@ -262,6 +263,11 @@ impl Gpu {
 
         // Put the GP0 state machine in ImageLoad mode
         self.gp0_mode = Gp0Mode::ImageLoad;
+    }
+
+    /// GP1(0x03) : Display Enable
+    fn gp1_display_enable(&mut self, val: u32) {
+        self.display_disabled = val & 1 != 0;
     }
 
     /// GP1(0x07) : Display Vertical Range
