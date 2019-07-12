@@ -1,4 +1,8 @@
+use std::fmt;
+
 use crate::gpu::commandbuffer::CommandBuffer;
+use crate::gpu::renderer::Renderer;
+use crate::gpu::vertex::Vertex;
 
 use self::displaydepth::DisplayDepth;
 use self::dmadirection::DmaDirection;
@@ -14,6 +18,8 @@ pub mod vmode;
 pub mod displaydepth;
 pub mod dmadirection;
 pub mod commandbuffer;
+pub mod renderer;
+pub mod vertex;
 
 pub struct Gpu {
     /// Texture page base X coordinate (4 bits , 64 byte increment )
@@ -134,10 +140,13 @@ pub struct Gpu {
 
     /// Current mode of the GP0 register
     gp0_mode: Gp0Mode,
+
+    /// OpenGL renderer
+    renderer: Renderer,
 }
 
 impl Gpu {
-    pub fn new() -> Gpu {
+    pub fn new(renderer: Renderer) -> Gpu {
         Gpu {
             page_base_x: 0,
             page_base_y: 0,
@@ -179,14 +188,19 @@ impl Gpu {
             gp0_words_remaining: 0,
             gp0_command_method: Gpu::gp0_nop,
             gp0_mode: Gp0Mode::Command,
+            renderer,
         }
     }
 
     /// Handle writes to the GP0 command register
     pub fn gp0(&mut self, val: u32) {
+        let opcode = (val >> 24) & 0xff;
+        debug!("GP0 execution - 0x{:08x} with opcode: [0x{:02x}]", val, opcode);
+        debug!("gp0_words_remaining - {}", self.gp0_words_remaining);
+        debug!("gp0_mode - {}", self.gp0_mode.to_string());
+
         if self.gp0_words_remaining == 0 {
             // We start a new GP0 command
-            let opcode = (val >> 24) & 0xff;
 
             let (len, method): (u32, fn(&mut Gpu)) = match opcode {
                 0x00 => (1, Gpu::gp0_nop),
@@ -194,9 +208,15 @@ impl Gpu {
                 0xe1 => (1, Gpu::gp0_draw_mode),
                 0xa0 => (3, Gpu::gp0_image_load),
                 0xc0 => (3, Gpu::gp0_image_store),
+                0x28 => (5, Gpu::gp0_quad_mono_opaque),
                 0x38 => (8, Gpu::gp0_quad_shaded_opaque),
                 0x30 => (6, Gpu::gp0_triangle_shaded_opaque),
                 0x2c => (9, Gpu::gp0_quad_texture_blend_opaque),
+                0xe2 => (1, Gpu::gp0_texture_window),
+                0xe3 => (1, Gpu::gp0_drawing_area_top_left),
+                0xe4 => (1, Gpu::gp0_drawing_area_bottom_right),
+                0xe5 => (1, Gpu::gp0_drawing_offset),
+                0xe6 => (1, Gpu::gp0_mask_bit_setting),
                 _ => panic!("Unhandled GP0 command 0x{:08x}", val),
             };
 
@@ -229,6 +249,8 @@ impl Gpu {
     pub fn gp1(&mut self, val: u32) {
         let opcode = (val >> 24) & 0xff;
 
+        debug!("GP1 execution - 0x{:08x} with opcode: [0x{:02x}]", val, opcode);
+
         match opcode {
             0x00 => self.gp1_reset(),
             0x08 => self.gp1_display_mode(val),
@@ -258,7 +280,13 @@ impl Gpu {
 
     /// GP0(0x30) : Shaded Opaque Triangle
     fn gp0_triangle_shaded_opaque(&mut self) {
-        warn!("[Unhandled] 0x30 - Draw triangle shaded");
+        let vertices = [
+            Vertex::new(Gpu::gp0_position(self.gp0_command[1]), Gpu::gp0_color(self.gp0_command[0])),
+            Vertex::new(Gpu::gp0_position(self.gp0_command[3]), Gpu::gp0_color(self.gp0_command[2])),
+            Vertex::new(Gpu::gp0_position(self.gp0_command[5]), Gpu::gp0_color(self.gp0_command[4])),
+        ];
+
+        self.renderer.push_triangle(&vertices);
     }
 
     /// GP0(0x2c): Textured Opaque Quadrilateral
@@ -277,7 +305,8 @@ impl Gpu {
         let imgsize = width * height;
 
         // If we have an odd number of pixels we must round up
-        // since we transfer 32bits at a time. There’ll be 16bits // of padding in the last word.
+        // since we transfer 32bits at a time. There’ll be 16bits
+        // of padding in the last word.
         let imgsize = (imgsize + 1) & !1;
         // Store number of words expected for this image
         self.gp0_words_remaining = imgsize / 2;
@@ -293,6 +322,58 @@ impl Gpu {
         let width = res & 0xffff;
         let height = res >> 16;
         warn!("Unhandled image store: {}x{}", width, height);
+    }
+
+    /// GP0(0xE2): Set Texture Window
+    fn gp0_texture_window(&mut self) {
+        let val = self.gp0_command[0];
+
+        self.texture_window_x_mask = (val & 0x1f) as u8;
+        self.texture_window_y_mask = ((val >> 5) & 0x1f) as u8;
+        self.texture_window_x_offset = ((val >> 10) & 0x1f) as u8;
+        self.texture_window_y_offset = ((val >> 15) & 0x1f) as u8;
+    }
+
+    /// GP0(0xE3): Set Drawing Area top left
+    fn gp0_drawing_area_top_left(&mut self) {
+        let val = self.gp0_command[0];
+
+        self.drawing_area_top = ((val >> 10) & 0x3ff) as u16;
+        self.drawing_area_left = (val & 0x3ff) as u16;
+    }
+
+    /// GP0(0xE4): Set Drawing Area bottom right
+    fn gp0_drawing_area_bottom_right(&mut self) {
+        let val = self.gp0_command[0];
+
+        self.drawing_area_bottom = ((val >> 10) & 0x3ff) as u16;
+        self.drawing_area_right = (val & 0x3ff) as u16;
+    }
+
+    /// GP0(0xE5): Set Drawing Offset
+    fn gp0_drawing_offset(&mut self) {
+        let val = self.gp0_command[0];
+
+        let x = (val & 0x7ff) as u16;
+        let y = ((val >> 11) & 0x7ff) as u16;
+
+        // Values are 11bit two's complement signed values, we need to
+        // shift the value to 16bits to force sign extension
+        self.drawing_x_offset = ((x << 5) as i16) >> 5;
+        self.drawing_y_offset = ((y << 5) as i16) >> 5;
+    }
+
+    /// GP0(0xE6): Set Mask Bit Setting
+    fn gp0_mask_bit_setting(&mut self) {
+        let val = self.gp0_command[0];
+
+        self.force_set_mask_bit = (val & 1) != 0;
+        self.preserve_masked_pixels = (val & 2) != 0;
+    }
+
+    /// GP0(0x28): Monochrome Opaque Quadrilateral
+    fn gp0_quad_mono_opaque(&mut self) {
+        warn!("Draw quad");
     }
 
     /// GP1(0x01): Reset Command Buffer
@@ -489,6 +570,23 @@ impl Gpu {
         self.display_line_end = 0x100;
         self.display_depth = DisplayDepth::D15Bits;
     }
+
+    /// Parse a position as written in the GP0 register and return it as
+    /// an array of two `i16`
+    fn gp0_position(pos: u32) -> [i16; 2] {
+        let x = pos as i16;
+        let y = (pos >> 16) as i16;
+
+        [x, y]
+    }
+
+    fn gp0_color(col: u32) -> [u8; 3] {
+        let r = col as u8;
+        let g = (col >> 8) as u8;
+        let b = (col >> 16) as u8;
+
+        [r, g, b]
+    }
 }
 
 /// Possible states for the GP0 command register
@@ -497,4 +595,14 @@ enum Gp0Mode {
     Command,
     /// Loading an image into VRAM
     ImageLoad,
+}
+
+impl fmt::Display for Gp0Mode {
+    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
+        let name = match self {
+            Gp0Mode::Command => "Command",
+            Gp0Mode::ImageLoad => "Command",
+        };
+        write!(f, "{:?}", name)
+    }
 }

@@ -4,10 +4,13 @@ extern crate log;
 use std::env;
 use std::path::Path;
 
+use byteorder::{ByteOrder, LittleEndian};
+
 use rust_playstation_emulator::bios::Bios;
 use rust_playstation_emulator::cpu::Cpu;
 use rust_playstation_emulator::cpu::interconnect::Interconnect;
 use rust_playstation_emulator::gpu::Gpu;
+use rust_playstation_emulator::gpu::renderer::Renderer;
 use rust_playstation_emulator::memory::ram::Ram;
 
 fn main() {
@@ -22,9 +25,14 @@ fn main() {
         None => panic!("usage: rpsx.exe rom game")
     };
 
+    let mut display = Renderer::new("I Wanna Be The Suleyth", 768, 432, 60).unwrap();
+
+    display.draw();
+
     let bios = Bios::new(&Path::new(&bios_filepath)).unwrap();
     let ram = Ram::new();
-    let gpu = Gpu::new();
+    let gpu = Gpu::new(display);
+
     let inter = Interconnect::new(
         bios,
         ram,

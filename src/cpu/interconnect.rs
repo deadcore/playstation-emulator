@@ -319,8 +319,13 @@ impl Interconnect {
 
             while remsz > 0 {
                 addr = (addr + 4) & 0x1ffffc;
+
                 let command = self.ram.load::<Word>(addr);
                 debug!("GPU command 0x{:08x}", command);
+
+                // Send command to the GPU
+                self.gpu.gp0(command);
+
                 remsz -= 1;
             }
 
@@ -330,8 +335,10 @@ impl Interconnect {
             if header & 0x800000 != 0 {
                 break;
             }
+
             addr = header & 0x1ffffc;
         }
+
         channel.done();
     }
 
