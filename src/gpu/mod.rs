@@ -1,8 +1,8 @@
 use std::fmt;
 
 use crate::gpu::commandbuffer::CommandBuffer;
-use crate::gpu::renderer::Renderer;
-use crate::gpu::vertex::Vertex;
+use crate::gpu::opengl::{Color, Renderer, Vertex};
+use crate::gpu::opengl::Position;
 
 use self::displaydepth::DisplayDepth;
 use self::dmadirection::DmaDirection;
@@ -11,6 +11,8 @@ use self::resolution::{HorizontalRes, VerticalRes};
 use self::texturedepth::TextureDepth;
 use self::vmode::VMode;
 
+pub mod opengl;
+
 pub mod texturedepth;
 pub mod field;
 pub mod resolution;
@@ -18,8 +20,6 @@ pub mod vmode;
 pub mod displaydepth;
 pub mod dmadirection;
 pub mod commandbuffer;
-pub mod renderer;
-pub mod vertex;
 
 pub struct Gpu {
     /// Texture page base X coordinate (4 bits , 64 byte increment )
@@ -194,13 +194,10 @@ impl Gpu {
 
     /// Handle writes to the GP0 command register
     pub fn gp0(&mut self, val: u32) {
-        let opcode = (val >> 24) & 0xff;
-        debug!("GP0 execution - 0x{:08x} with opcode: [0x{:02x}]", val, opcode);
-        debug!("gp0_words_remaining - {}", self.gp0_words_remaining);
-        debug!("gp0_mode - {}", self.gp0_mode.to_string());
-
         if self.gp0_words_remaining == 0 {
             // We start a new GP0 command
+            let opcode = (val >> 24) & 0xff;
+            debug!("GP0 execution - 0x{:08x} with opcode: [0x{:02x}]", val, opcode);
 
             let (len, method): (u32, fn(&mut Gpu)) = match opcode {
                 0x00 => (1, Gpu::gp0_nop),
@@ -275,15 +272,22 @@ impl Gpu {
 
     /// GP0(0x38): Shaded Opaque Quadrilateral
     fn gp0_quad_shaded_opaque(&mut self) {
-        warn!("[Unhandled] 0x38 - Draw quad shaded");
+        let vertices = [
+            Vertex::new(Position::from_packed(self.gp0_command[1]), Color::from_packed(self.gp0_command[0])),
+            Vertex::new(Position::from_packed(self.gp0_command[3]), Color::from_packed(self.gp0_command[2])),
+            Vertex::new(Position::from_packed(self.gp0_command[5]), Color::from_packed(self.gp0_command[4])),
+            Vertex::new(Position::from_packed(self.gp0_command[7]), Color::from_packed(self.gp0_command[6])),
+        ];
+
+        self.renderer.push_quad(&vertices);
     }
 
     /// GP0(0x30) : Shaded Opaque Triangle
     fn gp0_triangle_shaded_opaque(&mut self) {
         let vertices = [
-            Vertex::new(Gpu::gp0_position(self.gp0_command[1]), Gpu::gp0_color(self.gp0_command[0])),
-            Vertex::new(Gpu::gp0_position(self.gp0_command[3]), Gpu::gp0_color(self.gp0_command[2])),
-            Vertex::new(Gpu::gp0_position(self.gp0_command[5]), Gpu::gp0_color(self.gp0_command[4])),
+            Vertex::new(Position::from_packed(self.gp0_command[1]), Color::from_packed(self.gp0_command[0])),
+            Vertex::new(Position::from_packed(self.gp0_command[3]), Color::from_packed(self.gp0_command[2])),
+            Vertex::new(Position::from_packed(self.gp0_command[5]), Color::from_packed(self.gp0_command[4])),
         ];
 
         self.renderer.push_triangle(&vertices);
@@ -340,6 +344,7 @@ impl Gpu {
 
         self.drawing_area_top = ((val >> 10) & 0x3ff) as u16;
         self.drawing_area_left = (val & 0x3ff) as u16;
+        self.update_drawing_area();
     }
 
     /// GP0(0xE4): Set Drawing Area bottom right
@@ -348,6 +353,16 @@ impl Gpu {
 
         self.drawing_area_bottom = ((val >> 10) & 0x3ff) as u16;
         self.drawing_area_right = (val & 0x3ff) as u16;
+
+        self.update_drawing_area();
+    }
+
+    // Called when the drawing area changes to notify the renderer
+    fn update_drawing_area(&mut self) {
+        self.renderer.set_drawing_area(self.drawing_area_left,
+                                       self.drawing_area_top,
+                                       self.drawing_area_right,
+                                       self.drawing_area_bottom);
     }
 
     /// GP0(0xE5): Set Drawing Offset
@@ -359,8 +374,16 @@ impl Gpu {
 
         // Values are 11bit two's complement signed values, we need to
         // shift the value to 16bits to force sign extension
-        self.drawing_x_offset = ((x << 5) as i16) >> 5;
-        self.drawing_y_offset = ((y << 5) as i16) >> 5;
+        let x = ((x << 5) as i16) >> 5;
+        let y = ((y << 5) as i16) >> 5;
+
+        // Values are 11bit two's complement signed values, we need to
+        // shift the value to 16bits to force sign extension
+        self.drawing_x_offset = x;
+        self.drawing_y_offset = y;
+
+
+        self.renderer.set_draw_offset(x, y);
     }
 
     /// GP0(0xE6): Set Mask Bit Setting
@@ -373,7 +396,17 @@ impl Gpu {
 
     /// GP0(0x28): Monochrome Opaque Quadrilateral
     fn gp0_quad_mono_opaque(&mut self) {
-        warn!("Draw quad");
+        // Only one color repeated 4 times
+        let color = Color::from_packed(self.gp0_command[0]);
+
+        let vertices = [
+            Vertex::new(Position::from_packed(self.gp0_command[1]), color),
+            Vertex::new(Position::from_packed(self.gp0_command[2]), color),
+            Vertex::new(Position::from_packed(self.gp0_command[3]), color),
+            Vertex::new(Position::from_packed(self.gp0_command[4]), color),
+        ];
+
+        self.renderer.push_quad(&vertices);
     }
 
     /// GP1(0x01): Reset Command Buffer
@@ -569,6 +602,8 @@ impl Gpu {
         self.display_line_start = 0x10;
         self.display_line_end = 0x100;
         self.display_depth = DisplayDepth::D15Bits;
+
+        self.renderer.set_draw_offset(0, 0);
     }
 
     /// Parse a position as written in the GP0 register and return it as
