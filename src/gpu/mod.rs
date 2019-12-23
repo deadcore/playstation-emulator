@@ -272,6 +272,8 @@ impl Gpu {
 
     /// GP0(0x38): Shaded Opaque Quadrilateral
     fn gp0_quad_shaded_opaque(&mut self) {
+        debug!("gp0_quad_shaded_opaque");
+
         let vertices = [
             Vertex::new(Position::from_packed(self.gp0_command[1]), Color::from_packed(self.gp0_command[0])),
             Vertex::new(Position::from_packed(self.gp0_command[3]), Color::from_packed(self.gp0_command[2])),
@@ -284,6 +286,8 @@ impl Gpu {
 
     /// GP0(0x30) : Shaded Opaque Triangle
     fn gp0_triangle_shaded_opaque(&mut self) {
+        debug!("gp0_triangle_shaded_opaque");
+
         let vertices = [
             Vertex::new(Position::from_packed(self.gp0_command[1]), Color::from_packed(self.gp0_command[0])),
             Vertex::new(Position::from_packed(self.gp0_command[3]), Color::from_packed(self.gp0_command[2])),
@@ -295,7 +299,19 @@ impl Gpu {
 
     /// GP0(0x2c): Textured Opaque Quadrilateral
     fn gp0_quad_texture_blend_opaque(&mut self) {
-        warn!("[Unhandled] 0x2c - Draw quad texture blending");
+        debug!("gp0_quad_texture_blend_opaque");
+
+        // XXX We don’t support textures for now, use a solid red // color instead
+        let color = Color::new(0x80, 0x00, 0x00);
+
+        let vertices = [
+            Vertex::new(Position::from_packed(self.gp0_command[1]), color),
+            Vertex::new(Position::from_packed(self.gp0_command[3]), color),
+            Vertex::new(Position::from_packed(self.gp0_command[5]), color),
+            Vertex::new(Position::from_packed(self.gp0_command[7]), color),
+        ];
+
+        self.renderer.push_quad(&vertices);
     }
 
     /// GP0(0XA0): Image Load
@@ -384,6 +400,8 @@ impl Gpu {
 
 
         self.renderer.set_draw_offset(x, y);
+
+        self.renderer.display();
     }
 
     /// GP0(0xE6): Set Mask Bit Setting
@@ -396,6 +414,7 @@ impl Gpu {
 
     /// GP0(0x28): Monochrome Opaque Quadrilateral
     fn gp0_quad_mono_opaque(&mut self) {
+        debug!("gp0_quad_mono_opaque");
         // Only one color repeated 4 times
         let color = Color::from_packed(self.gp0_command[0]);
 

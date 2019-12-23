@@ -1,12 +1,9 @@
 use std::fmt;
 
-use glium::{DrawParameters, Frame, Program, Rect, Surface, VertexBuffer};
-use glium::debug::DebugCallbackBehavior;
-use glium::uniforms::{EmptyUniforms, UniformsStorage};
-use glium_sdl2;
-use glium_sdl2::DisplayBuild;
-use sdl2;
-use sdl2::video::GLProfile;
+use wgpu::{Device, Queue, RenderPipeline, SwapChain};
+use winit::dpi::LogicalSize;
+use winit::event_loop::EventLoop;
+use winit::window::WindowBuilder;
 
 /// Maximum number of vertex that can be stored in an attribute
 /// buffers
@@ -17,8 +14,6 @@ pub struct Vertex {
     pub position: [i16; 2],
     pub color: [u8; 3],
 }
-
-implement_vertex!(Vertex, position, color);
 
 impl Vertex {
     pub fn new(pos: Position, color: Color) -> Vertex {
@@ -53,10 +48,7 @@ impl Position {
         let x = val as i16;
         let y = (val >> 16) as i16;
 
-        Position {
-            x: x,
-            y: y,
-        }
+        Position { x, y }
     }
 }
 
@@ -102,93 +94,151 @@ impl fmt::Display for Color {
 }
 
 pub struct Renderer {
-    /// Glium display
-    window: glium_sdl2::SDL2Facade,
-    /// Glium surface,
-    target: Option<Frame>,
-    /// Framebuffer horizontal resolution (native: 1024)
-    fb_x_res: u16,
-    /// Framebuffer vertical resolution (native: 512)
-    fb_y_res: u16,
-    /// OpenGL Program object
-    program: Program,
-    /// Permanent vertex buffer
-    vertex_buffer: VertexBuffer<Vertex>,
-    /// GLSL uniforms
-    uniforms: UniformsStorage<'static, [i32; 2], EmptyUniforms>,
-    /// Glium draw parameters
-    params: DrawParameters<'static>,
+    fb_y_res: u32,
+    fb_x_res: u32,
+    buffer: Vec<Vertex>,
     /// Current number or vertices in the buffers
     nvertices: u32,
+    swap_chain: SwapChain,
+    device: Device,
+    render_pipeline: RenderPipeline,
+    queue: Queue,
 }
 
 impl Renderer {
-    pub fn new(sdl_context: &sdl2::Sdl) -> Renderer {
-        use glium_sdl2::DisplayBuild;
-        // Native PSX VRAM resolution
-        let fb_x_res = 1024u16;
-        let fb_y_res = 512u16;
+    pub fn new(event_loop: &EventLoop<()>) -> Renderer {
+        let fb_x_res = 1024;
+        let fb_y_res = 512;
 
-        let video_subsystem = sdl_context.video().unwrap();
+        /** Shader setup **/
+        let vertex = include_str!("shader.vert.glsl");
+        let fragment = include_str!("shader.frag.glsl");
 
-        let gl_attr = video_subsystem.gl_attr();
-        gl_attr.set_context_version(3, 3);
-        gl_attr.set_context_profile(GLProfile::Core);
+        let mut compiler = shaderc::Compiler::new().unwrap();
+        let mut options = shaderc::CompileOptions::new().unwrap();
+        options.add_macro_definition("EP", Some("main"));
 
-        // XXX Debug context is likely to be slower, we should make
-        // that configurable at some point.
-        gl_attr.set_context_flags().debug().set();
-        gl_attr.set_multisample_buffers(1);
-        gl_attr.set_multisample_samples(4);
+        let vertext_result = compiler
+            .compile_into_spirv(
+                vertex,
+                shaderc::ShaderKind::Vertex,
+                "shader.vert.glsl",
+                "main",
+                Some(&options),
+            )
+            .unwrap();
 
-        let window = video_subsystem
-            .window("Rustation", fb_x_res as u32, fb_y_res as u32)
-            .position_centered()
-            .resizable()
-            .build()
-            .ok()
-            .expect("Can't create SDL2 window");
+        let fragment_result = compiler
+            .compile_into_spirv(
+                fragment,
+                shaderc::ShaderKind::Fragment,
+                "shader.frag.glsl",
+                "main",
+                Some(&options),
+            )
+            .unwrap();
 
+        let vs = vertext_result.as_binary_u8();
+        let fs = fragment_result.as_binary_u8();
 
-        {
-            let mut target = window.draw();
-            target.clear_color(0.0, 0.0, 0.0, 1.0);
-            target.finish().unwrap();
-        }
-        // "Slurp" the contents of the shader files. Note: this is a
-        // compile-time thing.
-        let vs_src = include_str!("vertex.glsl");
-        let fs_src = include_str!("fragment.glsl");
+        let window = WindowBuilder::new()
+            .with_inner_size(LogicalSize::new(fb_x_res as f64, fb_y_res as f64))
+            .build(event_loop)
+            .unwrap();
 
-        let program = Program::from_source(&window, vs_src, fs_src, None).unwrap();
+        let surface = wgpu::Surface::create(&window);
 
-        let vertex_buffer = VertexBuffer::empty_persistent(&window,
-                                                           VERTEX_BUFFER_LEN as usize).unwrap();
+        let adapter = wgpu::Adapter::request(
+            &wgpu::RequestAdapterOptions {
+                power_preference: wgpu::PowerPreference::Default,
+                backends: wgpu::BackendBit::PRIMARY,
+            },
+        )
+            .unwrap();
 
-        let uniforms = uniform! {
-            offset: [0; 2],
-        };
+        let (device, mut queue) = adapter.request_device(&wgpu::DeviceDescriptor {
+            extensions: wgpu::Extensions {
+                anisotropic_filtering: false,
+            },
+            limits: wgpu::Limits::default(),
+        });
 
-        let params = DrawParameters {
-            // Default to full screen
-            scissor: Some(Rect {
-                left: 0,
-                bottom: 0,
-                width: fb_x_res as u32,
-                height: fb_y_res as u32,
+        let vs_module = device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&vs[..])).unwrap());
+        let fs_module = device.create_shader_module(&wgpu::read_spirv(std::io::Cursor::new(&fs[..])).unwrap());
+
+        let vertex_size = std::mem::size_of::<Vertex>();
+
+        let pipeline_layout = device.create_pipeline_layout(&wgpu::PipelineLayoutDescriptor {
+            bind_group_layouts: &[],
+        });
+
+        let render_pipeline = device.create_render_pipeline(&wgpu::RenderPipelineDescriptor {
+            layout: &pipeline_layout,
+            vertex_stage: wgpu::ProgrammableStageDescriptor {
+                module: &vs_module,
+                entry_point: "main",
+            },
+            fragment_stage: Some(wgpu::ProgrammableStageDescriptor {
+                module: &fs_module,
+                entry_point: "main",
             }),
-            ..Default::default()
-        };
+            rasterization_state: Some(wgpu::RasterizationStateDescriptor {
+                front_face: wgpu::FrontFace::Ccw,
+                cull_mode: wgpu::CullMode::None,
+                depth_bias: 0,
+                depth_bias_slope_scale: 0.0,
+                depth_bias_clamp: 0.0,
+            }),
+            primitive_topology: wgpu::PrimitiveTopology::TriangleList,
+            color_states: &[wgpu::ColorStateDescriptor {
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                color_blend: wgpu::BlendDescriptor::REPLACE,
+                alpha_blend: wgpu::BlendDescriptor::REPLACE,
+                write_mask: wgpu::ColorWrite::ALL,
+            }],
+            vertex_buffers: &[wgpu::VertexBufferDescriptor {
+                stride: vertex_size as wgpu::BufferAddress,
+                step_mode: wgpu::InputStepMode::Vertex,
+                attributes: &[
+                    wgpu::VertexAttributeDescriptor {
+                        format: wgpu::VertexFormat::Short2,
+                        offset: 0,
+                        shader_location: 0,
+                    },
+                    wgpu::VertexAttributeDescriptor {
+                        format: wgpu::VertexFormat::Uchar4,
+                        offset: 2 * 2,
+                        shader_location: 1,
+                    },
+                ],
+            }],
+            depth_stencil_state: None,
+            index_format: wgpu::IndexFormat::Uint16,
+            sample_count: 1,
+            sample_mask: !0,
+            alpha_to_coverage_enabled: false,
+        });
+
+        let mut swap_chain = device.create_swap_chain(
+            &surface,
+            &wgpu::SwapChainDescriptor {
+                usage: wgpu::TextureUsage::OUTPUT_ATTACHMENT,
+                format: wgpu::TextureFormat::Bgra8UnormSrgb,
+                width: fb_x_res,
+                height: fb_y_res,
+                present_mode: wgpu::PresentMode::Vsync,
+            },
+        );
+
 
         Renderer {
-            target: Some(window.draw()),
-            window: window,
-            fb_x_res: fb_x_res,
-            fb_y_res: fb_y_res,
-            program: program,
-            vertex_buffer: vertex_buffer,
-            uniforms: uniforms,
-            params: params,
+            fb_y_res,
+            fb_x_res,
+            swap_chain,
+            device,
+            render_pipeline,
+            queue,
+            buffer: Vec::with_capacity(VERTEX_BUFFER_LEN as usize),
             nvertices: 0,
         }
     }
@@ -197,15 +247,16 @@ impl Renderer {
     pub fn push_triangle(&mut self, vertices: &[Vertex; 3]) {
         debug!("Current number of vertices in the buffer: [{} / {}]. Pushing a vertices to the frame {:?}", self.nvertices, VERTEX_BUFFER_LEN, vertices);
 
+
         // Make sure we have enough room left to queue the vertex. We
         // need to push two triangles to draw a quad, so 6 vertex
         if self.nvertices + 3 > VERTEX_BUFFER_LEN {
             debug!("The vertex attribute buffers are full, force an early draw");
             self.draw();
         }
-
-        let slice = self.vertex_buffer.slice(self.nvertices as usize..(self.nvertices + 3) as usize).unwrap();
-        slice.write(vertices);
+        self.buffer.push(vertices[0]);
+        self.buffer.push(vertices[1]);
+        self.buffer.push(vertices[2]);
         self.nvertices += 3;
     }
 
@@ -213,11 +264,6 @@ impl Renderer {
     pub fn push_quad(&mut self, vertices: &[Vertex; 4]) {
         debug!("Pushing a quad to the frame {:?}", vertices);
 
-        // XXX Doesn't work, le slice retourne un [Vertex]
-        //// Push the first triangle
-        //self.push_triangle(&vertices[0..3]);
-        //// Push the 2nd triangle
-        //self.push_triangle(&vertices[1..4]);
         self.push_triangle(&[vertices[0], vertices[1], vertices[2]]);
         self.push_triangle(&[vertices[1], vertices[2], vertices[3]]);
     }
@@ -227,9 +273,9 @@ impl Renderer {
         // Force draw for the primitives with the current offset
         self.draw();
 
-        self.uniforms = uniform! {
-            offset : [x as i32, y as i32],
-        }
+//        self.uniforms = uniform! {
+//            offset : [x as i32, y as i32],
+//        }
     }
 
     /// Set the drawing area. Coordinates are offsets in the
@@ -263,59 +309,45 @@ impl Renderer {
             println!("Unsupported drawing area: {}x{} [{}x{}->{}x{}]",
                      width, height,
                      left, top, right, bottom);
-            self.params.scissor = Some(Rect {
-                left: 0,
-                bottom: 0,
-                width: 0,
-                height: 0,
-            });
-        } else {
-            self.params.scissor = Some(Rect {
-                left: left as u32,
-                bottom: bottom as u32,
-                width: width as u32,
-                height: height as u32,
-            });
-        }
+        } else {}
     }
 
     /// Draw the buffered commands and reset the buffers
     pub fn draw(&mut self) {
         debug!("Drawing the view");
 
-        use glium::index;
+        let frame = self.swap_chain.get_next_texture();
+        let vertex_buf = self.device
+                             .create_buffer_mapped(
+                                 self.buffer.len(),
+                                 wgpu::BufferUsage::VERTEX,
+                             )
+                             .fill_from_slice(&self.buffer);
 
-        self.target
-            .as_mut()
-            .unwrap()
-            .draw(self.vertex_buffer.slice(0..self.nvertices as usize).unwrap(),
-                  &index::NoIndices(index::PrimitiveType::TrianglesList),
-                  &self.program,
-                  &self.uniforms,
-                  &self.params)
-            .unwrap();
+        let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { todo: 0 });
+        {
+            let mut rpass = encoder.begin_render_pass(&wgpu::RenderPassDescriptor {
+                color_attachments: &[wgpu::RenderPassColorAttachmentDescriptor {
+                    attachment: &frame.view,
+                    resolve_target: None,
+                    load_op: wgpu::LoadOp::Clear,
+                    store_op: wgpu::StoreOp::Store,
+                    clear_color: wgpu::Color::BLACK,
+                }],
+                depth_stencil_attachment: None,
+            });
+            rpass.set_pipeline(&self.render_pipeline);
+            rpass.set_vertex_buffers(0, &[(&vertex_buf, 0)]);
+            rpass.draw(0..(self.buffer.len() as u32), 0..1);
+        }
+        self.queue.submit(&[encoder.finish()]);
 
-        // Reset the buffers
         self.nvertices = 0;
     }
 
     /// Draw the buffered commands and display them
     pub fn display(&mut self) {
+        self.draw();
         debug!("Displaying the view");
-        {
-            let target = self.target.take().unwrap();
-            target.finish().unwrap();
-        }
-
-        self.target = Some(self.window.draw());
-    }
-}
-
-
-impl Drop for Renderer {
-    fn drop(&mut self) {
-        if let Some(frame) = self.target.take() {
-            frame.finish().unwrap();
-        }
     }
 }

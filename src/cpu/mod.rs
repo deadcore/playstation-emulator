@@ -72,14 +72,14 @@ pub mod exception;
 
 /// CPU state
 pub struct Cpu {
-    registers: Registers,
+    pub registers: Registers,
 
     /// Memory interface
-    interconnect: Interconnect,
+    pub interconnect: Interconnect,
 
     /// Load initiated by the current instruction (will take effect
     /// after the load delay slot)
-    load: Delay,
+    pub load: Delay,
 }
 
 
@@ -117,7 +117,9 @@ impl Cpu {
 
         let operation = self.decode(instruction);
 
-        debug!("0x{:08x}: {}", self.registers.pc(), operation.gnu());
+        if log_enabled!(log::Level::Debug) {
+            debug!("0x{:08x}: {}", self.registers.pc(), operation.gnu());
+        }
 
         let maybe_exception = operation.perform(&mut self.registers, &mut self.interconnect, &mut self.load);
 
