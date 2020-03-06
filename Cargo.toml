@@ -19,6 +19,8 @@ wgpu = "0.4.0"
 winit = "0.20.0-alpha4"
 arrayvec = "0.4"
 shaderc = "0.6"
+gdb-remote-protocol = { git = "https://github.com/luser/rust-gdb-remote-protocol", rev = "3e2f7c7204f85781f8b37d601217b05935547a7f" }
+
 
 [lib]
 name = 'rust_playstation_emulator'
@@ -27,7 +29,3 @@ path = 'src/lib.rs'
 [[bin]]
 name = 'rust_playstation_emulator'
 path = 'src/bin/emulator.rs'
-
-[[bin]]
-name = 'rust_playstation_emulator_curry'
-path = 'src/bin/curry.rs'
