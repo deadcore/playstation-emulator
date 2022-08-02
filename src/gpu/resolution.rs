@@ -4,7 +4,7 @@ pub struct HorizontalRes(u8);
 
 impl HorizontalRes {
     /// Create a new HorizontalRes instance from the 2 bit field ‘hr1‘
-    /// and the one bit field ‘hr2‘
+    /// And the one bit field ‘hr2‘
     pub fn from_fields(hr1: u8, hr2: u8) -> HorizontalRes {
         let hr = (hr2 & 1) | ((hr1 & 3) << 1);
         HorizontalRes(hr)

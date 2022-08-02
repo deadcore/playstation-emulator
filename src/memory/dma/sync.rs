@@ -1,7 +1,7 @@
 /// DMA transfer synchronization mode
 #[derive(Clone, Copy)]
 pub enum Sync {
-    /// Transfer starts when the CPU writes to the Trigger bit and
+    /// Transfer starts when the CPU writes to the Trigger bit And
     /// transfers everything at once
     Manual = 0,
     /// Sync blocks to DMA requests

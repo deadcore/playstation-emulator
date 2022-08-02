@@ -6,36 +6,22 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
 /// Add Immediate Unsigned
-pub struct Addu {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let s = instruction.s();
+    let t = instruction.t();
+    let d = instruction.d();
+
+    let v = registers.reg(s).wrapping_add(registers.reg(t));
+
+    registers.set_reg(d, v);
+
+    Ok(())
 }
 
-impl Addu {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Addu {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
+    let t = instruction.t();
+    let d = instruction.d();
 
-impl Operation for Addu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        let v = registers.reg(s).wrapping_add(registers.reg(t));
-
-        registers.set_reg(d, v);
-
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        format!("ADDU {}, {}, {}", d, s, t)
-    }
+    format!("ADDU {}, {}, {}", d, s, t)
 }

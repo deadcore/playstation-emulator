@@ -3,61 +3,7 @@ extern crate log;
 
 use crate::cpu::delay::Delay;
 use crate::cpu::exception::Exception;
-use crate::cpu::operations::add::Add;
-use crate::cpu::operations::addi::Addi;
-use crate::cpu::operations::addiu::*;
-use crate::cpu::operations::addu::Addu;
-use crate::cpu::operations::and::And;
-use crate::cpu::operations::andi::Andi;
-use crate::cpu::operations::beq::Beq;
-use crate::cpu::operations::bgtz::Bqtz;
-use crate::cpu::operations::bltz::Bltz;
-use crate::cpu::operations::bne::*;
-use crate::cpu::operations::bxx::Bxx;
-use crate::cpu::operations::div::Div;
-use crate::cpu::operations::divu::Divu;
-use crate::cpu::operations::j::*;
-use crate::cpu::operations::jal::Jal;
-use crate::cpu::operations::jalr::Jarl;
-use crate::cpu::operations::jr::Jr;
-use crate::cpu::operations::lb::Lb;
-use crate::cpu::operations::lbu::Lbu;
-use crate::cpu::operations::lh::Lh;
-use crate::cpu::operations::lhu::Lhu;
-use crate::cpu::operations::lui::*;
-use crate::cpu::operations::lw::Lw;
-use crate::cpu::operations::lwl::Lwl;
-use crate::cpu::operations::lwr::Lwr;
-use crate::cpu::operations::mfc0::Mfc0;
-use crate::cpu::operations::mfhi::Mfhi;
-use crate::cpu::operations::mflo::Mflo;
-use crate::cpu::operations::mtc0::*;
-use crate::cpu::operations::mthi::Mtlo;
-use crate::cpu::operations::mtlo::Mthi;
-use crate::cpu::operations::multu::Multu;
-use crate::cpu::operations::nor::Nor;
 use crate::cpu::operations::Operation;
-use crate::cpu::operations::or::*;
-use crate::cpu::operations::ori::*;
-use crate::cpu::operations::rfe::Rfe;
-use crate::cpu::operations::sb::Sb;
-use crate::cpu::operations::sh::Sh;
-use crate::cpu::operations::sll::*;
-use crate::cpu::operations::sllv::Sllv;
-use crate::cpu::operations::slt::Slt;
-use crate::cpu::operations::slti::Slti;
-use crate::cpu::operations::sltiu::Sltiu;
-use crate::cpu::operations::sltu::Sltu;
-use crate::cpu::operations::sra::Sra;
-use crate::cpu::operations::srl::Srl;
-use crate::cpu::operations::srlv::Srlv;
-use crate::cpu::operations::sub::Sub;
-use crate::cpu::operations::subu::Subu;
-use crate::cpu::operations::sw::*;
-use crate::cpu::operations::swl::Swl;
-use crate::cpu::operations::swr::Swr;
-use crate::cpu::operations::syscall::Syscall;
-use crate::cpu::operations::xor::Xor;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 use crate::memory::Word;
@@ -104,7 +50,8 @@ impl Cpu {
         self.registers.set_pc(self.registers.next_pc());
         self.registers.set_next_pc(self.registers.next_pc().wrapping_add(4));
 
-        let (reg, val) = self.load.value();
+        let reg = self.load.register_index();
+        let val = self.load.value();
         self.registers.set_reg(reg, val);
 
         // We reset the load to target register 0 for the next
@@ -130,82 +77,82 @@ impl Cpu {
         self.registers.swap_registers();
     }
 
-    fn decode(&mut self, instruction: Instruction) -> Box<dyn Operation> {
+    fn decode(&mut self, instruction: Instruction) -> Operation {
         match instruction.function() {
             0b000000 => self.decode_and_execute_sub_function(instruction),
-            0b001111 => Box::new(Lui::new(instruction)),
-            0b001101 => Box::new(Ori::new(instruction)),
-            0b101011 => Box::new(Sw::new(instruction)),
-            0b001001 => Box::new(Addiu::new(instruction)),
+            0b001111 => Operation::Lui(instruction),
+            0b001101 => Operation::Ori(instruction),
+            0b101011 => Operation::Sw(instruction),
+            0b001001 => Operation::Addiu(instruction),
             0b010000 => self.decode_and_execute_cop0(instruction),
-            0b000010 => Box::new(J::new(instruction)),
-            0b000101 => Box::new(Bne::new(instruction)),
-            0b001000 => Box::new(Addi::new(instruction)),
-            0b100011 => Box::new(Lw::new(instruction)),
-            0b101001 => Box::new(Sh::new(instruction)),
-            0b000011 => Box::new(Jal::new(instruction)),
-            0b001100 => Box::new(Andi::new(instruction)),
-            0b101000 => Box::new(Sb::new(instruction)),
-            0b100000 => Box::new(Lb::new(instruction)),
-            0b000100 => Box::new(Beq::new(instruction)),
-            0b000111 => Box::new(Bqtz::new(instruction)),
-            0b000110 => Box::new(Bltz::new(instruction)),
-            0b100100 => Box::new(Lbu::new(instruction)),
-            0b000001 => Box::new(Bxx::new(instruction)),
-            0b001010 => Box::new(Slti::new(instruction)),
-            0b001011 => Box::new(Sltiu::new(instruction)),
-            0b100101 => Box::new(Lhu::new(instruction)),
-            0b100001 => Box::new(Lh::new(instruction)),
-            0b100010 => Box::new(Lwl::new(instruction)),
-            0b100110 => Box::new(Lwr::new(instruction)),
-            0b101010 => Box::new(Swl::new(instruction)),
-            0b101110 => Box::new(Swr::new(instruction)),
+            0b000010 => Operation::J(instruction),
+            0b000101 => Operation::Bne(instruction),
+            0b001000 => Operation::Addi(instruction),
+            0b100011 => Operation::Lw(instruction),
+            0b101001 => Operation::Sh(instruction),
+            0b000011 => Operation::Jal(instruction),
+            0b001100 => Operation::Andi(instruction),
+            0b101000 => Operation::Sb(instruction),
+            0b100000 => Operation::Lb(instruction),
+            0b000100 => Operation::Beq(instruction),
+            0b000111 => Operation::Bqtz(instruction),
+            0b000110 => Operation::Bltz(instruction),
+            0b100100 => Operation::Lbu(instruction),
+            0b000001 => Operation::Bxx(instruction),
+            0b001010 => Operation::Slti(instruction),
+            0b001011 => Operation::Sltiu(instruction),
+            0b100101 => Operation::Lhu(instruction),
+            0b100001 => Operation::Lh(instruction),
+            0b100010 => Operation::Lwl(instruction),
+            0b100110 => Operation::Lwr(instruction),
+            0b101010 => Operation::Swl(instruction),
+            0b101110 => Operation::Swr(instruction),
             _ => panic!("Unhandled instruction [0x{:08x}]. Function call was: [{:#08b}]", instruction.0, instruction.function())
         }
     }
 
-    fn decode_and_execute_sub_function(&mut self, instruction: Instruction) -> Box<dyn Operation> {
+    fn decode_and_execute_sub_function(&mut self, instruction: Instruction) -> Operation {
         match instruction.subfunction() {
-            0b000000 => Box::new(Sll::new(instruction)),
-            0b100101 => Box::new(Or::new(instruction)),
-            0b100111 => Box::new(Nor::new(instruction)),
-            0b101011 => Box::new(Sltu::new(instruction)),
-            0b100001 => Box::new(Addu::new(instruction)),
-            0b001000 => Box::new(Jr::new(instruction)),
-            0b100100 => Box::new(And::new(instruction)),
-            0b100000 => Box::new(Add::new(instruction)),
-            0b001001 => Box::new(Jarl::new(instruction)),
-            0b100011 => Box::new(Subu::new(instruction)),
-            0b000011 => Box::new(Sra::new(instruction)),
-            0b011010 => Box::new(Div::new(instruction)),
-            0b010010 => Box::new(Mflo::new(instruction)),
-            0b010000 => Box::new(Mfhi::new(instruction)),
-            0b000010 => Box::new(Srl::new(instruction)),
-            0b011011 => Box::new(Divu::new(instruction)),
-            0b101010 => Box::new(Slt::new(instruction)),
-            0b001100 => Box::new(Syscall::new()),
-            0b010011 => Box::new(Mtlo::new(instruction)),
-            0b010001 => Box::new(Mthi::new(instruction)),
-            0b000100 => Box::new(Sllv::new(instruction)),
-            0b100110 => Box::new(Xor::new(instruction)),
-            0b011001 => Box::new(Multu::new(instruction)),
-            0b000110 => Box::new(Srlv::new(instruction)),
-            0b100010 => Box::new(Sub::new(instruction)),
+            0b000000 => Operation::Sll(instruction),
+            0b100101 => Operation::Or(instruction),
+            0b100111 => Operation::Nor(instruction),
+            0b101011 => Operation::Sltu(instruction),
+            0b100001 => Operation::Addu(instruction),
+            0b001000 => Operation::Jr(instruction),
+            0b100100 => Operation::And(instruction),
+            0b100000 => Operation::Add(instruction),
+            0b001001 => Operation::Jalr(instruction),
+            0b100011 => Operation::Subu(instruction),
+            0b000011 => Operation::Sra(instruction),
+            0b011010 => Operation::Div(instruction),
+            0b010010 => Operation::Mflo(instruction),
+            0b010000 => Operation::Mfhi(instruction),
+            0b000010 => Operation::Srl(instruction),
+            0b011011 => Operation::Divu(instruction),
+            0b101010 => Operation::Slt(instruction),
+            0b001100 => Operation::Syscall(instruction),
+            0b010011 => Operation::Mtlo(instruction),
+            0b010001 => Operation::Mthi(instruction),
+            0b000100 => Operation::Sllv(instruction),
+            0b100110 => Operation::Xor(instruction),
+            0b011001 => Operation::Multu(instruction),
+            0b000110 => Operation::Srlv(instruction),
+            0b100010 => Operation::Sub(instruction),
             _ => panic!("Unhandled instruction [0x{:08x}]. Sub function call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
 
     /// Coprocessor 0 opcode
-    fn decode_and_execute_cop0(&mut self, instruction: Instruction) -> Box<dyn Operation> {
+    fn decode_and_execute_cop0(&mut self, instruction: Instruction) -> Operation {
         match instruction.cop_opcode() {
-            0b000100 => Box::new(Mtc0::new(instruction)),
-            0b000000 => Box::new(Mfc0::new(instruction)),
-            0b010000 => Box::new(Rfe::new(instruction)),
+            0b000100 => Operation::Mtc0(instruction),
+            0b000000 => Operation::Mfc0(instruction),
+            0b010000 => Operation::Rfe(instruction),
             _ => panic!("Unhandled cop0 instruction [0x{:08x}]. Cop0 call was: [{:#08b}]", instruction.0, instruction.subfunction())
         }
     }
 
-    /// Update SR, CAUSE and EPC when an exception is
+    /// Update SR, CAUSE And EPC when an exception is
     /// triggered. Returns the address of the exception handler.
     fn enter_exception(&mut self, cause: Exception) {
         warn!("Exception [{}] encountered", cause);
@@ -220,7 +167,7 @@ impl Cpu {
         // are three pairs of Interrupt Enable/User Mode bits behaving
         // like a stack 3 entries deep. Entering an exception pushes a
         // pair of zeroes by left shifting the stack which disables
-        // interrupts and puts the CPU in kernel mode. The original
+        // interrupts And puts the CPU in kernel mode. The original
         // third entry is discarded (it's up to the kernel to handle
         // more than two recursive exception levels).
         let mode = self.registers.sr() & 0x3f;
@@ -245,7 +192,7 @@ impl Cpu {
 
         if self.load.delay_slot() {
             // When an exception occurs in a delay slot `EPC` points
-            // to the branch instruction and bit 31 of `CAUSE` is set.
+            // to the branch instruction And bit 31 of `CAUSE` is set.
             self.registers.set_epc(self.registers.pc().wrapping_sub(4));
             let mut cause = self.registers.cause();
             cause |= 1 << 31;

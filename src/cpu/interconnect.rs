@@ -59,7 +59,7 @@ impl Interconnect {
             trace!("GPU read {}", offset);
             return match offset {
                 // GPUSTAT: set bit 26, 27 28 to signal that the GPU
-                // is ready for DMA and CPU access. This way the BIOS
+                // is ready for DMA And CPU access. This way the BIOS
                 // won’t dead lock waiting for an event that’ll never
                 // come .
                 4 => 0x1c000000,
@@ -227,7 +227,7 @@ impl Interconnect {
         let active_port = {
             // Per−channel registers
             match major {
-                0...6 => {
+                0..=6 => {
                     let port = Port::from_index(major);
                     let channel = self.dma.channel_mut(port);
                     match minor {
@@ -265,7 +265,7 @@ impl Interconnect {
 
         match major {
             // Per−channel registers
-            0...6 => {
+            0..=6 => {
                 let channel = self.dma.channel(Port::from_index(major));
                 match minor {
                     8 => channel.control(),
@@ -365,7 +365,7 @@ impl Interconnect {
             // Not sure what happens if address is
             // bogus... Mednafen just masks addr this way, maybe
             // that’s how the hardware behaves (i.e. the RAM
-            // address wraps and the two LSB are ignored, seems
+            // address wraps And the two LSB are ignored, seems
             // reasonable enough
             let cur_addr = addr & 0x1ffffc;
 
@@ -447,17 +447,17 @@ pub mod map {
     /// ScratchPad: data cache used as a fast 1kB RAM
     pub const SCRATCH_PAD: Range = Range(0x1f800000, 1024);
 
-    /// Memory latency and expansion mapping
+    /// Memory latency And expansion mapping
     pub const MEM_CONTROL: Range = Range(0x1f801000, 36);
 
-    /// Gamepad and memory card controller
+    /// Gamepad And memory card controller
     pub const PAD_MEMCARD: Range = Range(0x1f801040, 32);
 
     /// Register that has something to do with RAM configuration,
     /// configured by the BIOS
     pub const RAM_SIZE: Range = Range(0x1f801060, 4);
 
-    /// Interrupt Control registers (status and mask)
+    /// Interrupt Control registers (status And mask)
     pub const IRQ_CONTROL: Range = Range(0x1f801070, 8);
 
     /// Direct Memory Access registers

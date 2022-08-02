@@ -16,7 +16,7 @@ const BIOS_SIZE: u64 = 512 * 1024;
 
 impl Bios {
     /// Load a BIOS image from the file located at 'path'
-    pub fn new(path: &Path) -> Result<Bios> {
+    pub fn new<P: AsRef<Path>>(path: P) -> Result<Bios> {
         let file = File::open(path)?;
         let mut data = Vec::new();
         // Load the BIOS

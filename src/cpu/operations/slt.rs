@@ -10,38 +10,25 @@ use crate::instruction::Instruction;
 /// slt $1, $25, $24
 ///
 /// It's like SLTU but with signed operands:
-pub struct Slt {
-    instruction: Instruction
+
+/// Set on Less Than (signed)
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let d = instruction.d();
+    let s = instruction.s();
+    let t = instruction.t();
+
+    let s = registers.reg(s) as i32;
+    let t = registers.reg(t) as i32;
+    let v = s < t;
+
+    registers.set_reg(d, v as u32);
+    Ok(())
 }
 
-impl Slt {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Slt {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let d = instruction.d();
+    let s = instruction.s();
+    let t = instruction.t();
 
-impl Operation for Slt {
-    /// Set on Less Than (signed)
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let d = self.instruction.d();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        let s = registers.reg(s) as i32;
-        let t = registers.reg(t) as i32;
-        let v = s < t;
-
-        registers.set_reg(d, v as u32);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let d = self.instruction.d();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        format!("SLT {}, {}, {}", d, s, t)
-    }
+    format!("SLT {}, {}, {}", d, s, t)
 }

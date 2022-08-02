@@ -25,7 +25,7 @@ pub struct Dma {
 
     /// Bits know what them back
     /// [0:5] of the interrupt registers are RW but I don't
-    /// they're supposed to do so I just store them and send
+    /// they're supposed to do so I just store them And send
     /// untouched on reads
     irq_dummy: u8,
 

@@ -12,37 +12,24 @@ use crate::memory::Byte;
 ///
 /// It's exactly like LB but without sign extension, the high 24 bits of the target
 /// register are set to 0:
-pub struct Lbu {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction,  registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let t = instruction.t();
+    let s = instruction.s();
+
+    let addr = registers.reg(s).wrapping_add(i);
+
+    let v = interconnect.load::<Byte>(addr);
+
+    load.set(t, v as u32);
+    Ok(())
 }
 
-impl Lbu {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Lbu {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let t = instruction.t();
+    let s = instruction.s();
+    let i = instruction.imm_se();
 
-impl Operation for Lbu {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        let addr = registers.reg(s).wrapping_add(i);
-
-        let v = interconnect.load::<Byte>(addr);
-
-        load.set(t, v as u32);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-        let i = self.instruction.imm_se();
-
-        format!("LBU {}, 0x{:08x}({})", t, i, s)
-    }
+    format!("LBU {}, 0x{:08x}({})", t, i, s)
 }

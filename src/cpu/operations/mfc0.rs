@@ -10,43 +10,29 @@ use crate::instruction::Instruction;
 ///
 /// mfc0 $2, $cop0 12
 ///
-/// There's one important thing to note however: MFC instructions behave like memory loads and have
+/// There's one important thing to note however: MFC instructions behave like memory loads And have
 /// a delay slot before the value is finally stored in the target register.
 ///
 /// Fortunately we can simply re-use our load delay slots infrastructure:
-pub struct Mfc0 {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction,  registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) -> Result<(), Exception> {
+    let cpu_r = instruction.t();
+    let cop_r = instruction.d().0;
+
+    let v = match cop_r {
+        12 => registers.sr(),
+        13 => registers.cause(),
+        14 => registers.epc(),
+        _ => panic!("Unhandled read from cop0r{}", cop_r),
+    };
+
+    delay.set(cpu_r, v);
+
+    Ok(())
 }
 
-impl Mfc0 {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Mfc0 {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let cpu_r = instruction.t();
+    let cop_r = instruction.d().0;
 
-impl Operation for Mfc0 {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, delay: &mut Delay) -> Result<(), Exception> {
-        let cpu_r = self.instruction.t();
-        let cop_r = self.instruction.d().0;
-
-        let v = match cop_r {
-            12 => registers.sr(),
-            13 => registers.cause(),
-            14 => registers.epc(),
-            _ => panic!("Unhandled read from cop0r{}", cop_r),
-        };
-
-        delay.set(cpu_r, v);
-
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let cpu_r = self.instruction.t();
-        let cop_r = self.instruction.d().0;
-
-        format!("MFC0 {}, cop0r_{}", cpu_r, cop_r)
-    }
+    format!("MFC0 {}, cop0r_{}", cpu_r, cop_r)
 }

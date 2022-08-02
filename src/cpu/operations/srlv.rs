@@ -11,35 +11,22 @@ use crate::instruction::Instruction;
 ///
 /// It’s implemented like SRAV without sign extension (or like SRL with a
 /// register holding the shift amount, if you prefer):
-pub struct Srlv {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let d = instruction.d();
+    let t = instruction.t();
+    let s = instruction.s();
+
+    let v = registers.reg(t) >> (registers.reg(s) & 0x1f);
+
+    registers.set_reg(d, v);
+    Ok(())
 }
 
-impl Srlv {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Srlv {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let d = instruction.d();
+    let t = instruction.t();
+    let s = instruction.s();
 
-impl Operation for Srlv {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let d = self.instruction.d();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        let v = registers.reg(t) >> (registers.reg(s) & 0x1f);
-
-        registers.set_reg(d, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let d = self.instruction.d();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        format!("srlv {}, {}, {}", d, t, s)
-    }
+    format!("srlv {}, {}, {}", d, t, s)
 }

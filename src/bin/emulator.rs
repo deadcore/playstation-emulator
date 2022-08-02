@@ -10,12 +10,15 @@ use winit::{
     event_loop::{ControlFlow, EventLoop},
 };
 
+use log::debug;
+
 use rust_playstation_emulator::bios::Bios;
 use rust_playstation_emulator::cpu::Cpu;
 use rust_playstation_emulator::cpu::interconnect::Interconnect;
 use rust_playstation_emulator::gpu::Gpu;
 use rust_playstation_emulator::gpu::opengl::Renderer;
 use rust_playstation_emulator::memory::ram::Ram;
+use winit::event::Event;
 
 fn main() {
     env_logger::builder()
@@ -26,14 +29,14 @@ fn main() {
 
     let bios_filepath = match env::args().nth(1) {
         Some(x) => x,
-        None => panic!("usage: rpsx.exe rom game")
+        None => panic!("usage: rpsx rom game")
     };
 
     let event_loop = EventLoop::new();
 
     let display = Renderer::new(&event_loop);
 
-    let bios = Bios::new(&Path::new(&bios_filepath)).unwrap();
+    let bios = Bios::new(bios_filepath).unwrap();
     let ram = Ram::new();
     let gpu = Gpu::new(display);
 
@@ -67,14 +70,45 @@ fn main() {
                 }
                 _ => {}
             },
-            event::Event::EventsCleared => {
+            // // event::Event::EventsCleared => {
+            // //     while running {
+            // //         for _ in 0..1_000_000 {
+            // //             cpu.run_next_instruction();
+            // //         }
+            // //     }
+            // // }
+            // _ => (),
+            Event::NewEvents(evt) => {
+                debug!("Event::NewEvents - {:?}", evt)
+            }
+            Event::DeviceEvent { device_id, event } => {
+                debug!("Event::DeviceEvent - device_id: {:?}, event: {:?}", device_id, event)
+            }
+            Event::UserEvent(evt) => {
+                debug!("Event::UserEvent - {:?}", evt)
+            }
+            Event::Suspended => {
+                debug!("Event::Suspended")
+            }
+            Event::Resumed => {
+                debug!("Event::Resumed")
+            }
+            Event::MainEventsCleared => {
+                debug!("Event::MainEventsCleared")
+            }
+            Event::RedrawRequested(evt) => {
+                debug!("Event::RedrawRequested - {:?}", evt)
+            }
+            Event::RedrawEventsCleared => {
                 while running {
                     for _ in 0..1_000_000 {
                         cpu.run_next_instruction();
                     }
                 }
             }
-            _ => (),
+            Event::LoopDestroyed => {
+                println!("Event::LoopDestroyed")
+            }
         }
     });
 }

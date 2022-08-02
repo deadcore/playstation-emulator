@@ -10,37 +10,24 @@ use crate::instruction::Instruction;
 /// slti $1, $4, 16
 ///
 /// It works like SLTU except that it compares a register with an immediate
-/// value (sign-extended) and the comparison is done using signed arithmetic:
-pub struct Slti {
-    instruction: Instruction
+/// value (sign-extended) And the comparison is done using signed arithmetic:
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se() as i32;
+    let s = instruction.s();
+    let t = instruction.t();
+
+    let v = (registers.reg(s) as i32) < i;
+
+    registers.set_reg(t, v as u32);
+
+    Ok(())
 }
 
-impl Slti {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Slti {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.imm_se() as i32;
+    let s = instruction.s();
+    let t = instruction.t();
 
-impl Operation for Slti {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se() as i32;
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        let v = (registers.reg(s) as i32) < i;
-
-        registers.set_reg(t, v as u32);
-
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.imm_se() as i32;
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        format!("SLTI {}, {}, 0x{:04x}", t, s, i)
-    }
+    format!("SLTI {}, {}, 0x{:04x}", t, s, i)
 }

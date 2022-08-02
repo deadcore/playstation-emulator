@@ -11,35 +11,22 @@ use crate::instruction::Instruction;
 /// blez $5, +20
 ///
 /// It's the same thing as BGTZ with the opposite predicate:
-pub struct Bltz {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let s = instruction.s();
+
+    let v = registers.reg(s) as i32;
+
+    if v <= 0 {
+        registers.branch(i);
+    }
+    Ok(())
 }
 
-impl Bltz {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Bltz {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
+    let i = instruction.imm_se();
 
-impl Operation for Bltz {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let s = self.instruction.s();
-
-        let v = registers.reg(s) as i32;
-
-        if v <= 0 {
-            registers.branch(i);
-        }
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-        let i = self.instruction.imm_se();
-
-        format!("BLTZ {}, 0x{:04x}", s, i)
-    }
+    format!("BLTZ {}, 0x{:04x}", s, i)
 }

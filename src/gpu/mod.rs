@@ -29,7 +29,7 @@ pub struct Gpu {
     page_base_y: u8,
 
     /// Semi−transparency. Not entirely sure how to handle that value
-    /// yet, it seems to describe how to blend the source and
+    /// yet, it seems to describe how to blend the source And
     /// destination colors .
     semi_transparency: u8,
 
@@ -625,7 +625,7 @@ impl Gpu {
         self.renderer.set_draw_offset(0, 0);
     }
 
-    /// Parse a position as written in the GP0 register and return it as
+    /// Parse a position as written in the GP0 register And return it as
     /// an array of two `i16`
     fn gp0_position(pos: u32) -> [i16; 2] {
         let x = pos as i16;

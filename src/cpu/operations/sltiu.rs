@@ -10,36 +10,23 @@ use crate::instruction::Instruction;
 /// sltiu $1, $2, 0x45
 ///
 /// It's implemented like SLTI but using unsigned integers18:
-pub struct Sltiu {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let s = instruction.s();
+    let t = instruction.t();
+
+    let v = registers.reg(s) < i;
+
+    registers.set_reg(t, v as u32);
+
+    Ok(())
 }
 
-impl Sltiu {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Sltiu {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.imm_se();
+    let s = instruction.s();
+    let t = instruction.t();
 
-impl Operation for Sltiu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        let v = registers.reg(s) < i;
-
-        registers.set_reg(t, v as u32);
-
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.imm_se();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        format!("SLTIU {}, {}, 0x{:04x}", t, s, i)
-    }
+    format!("SLTIU {}, {}, 0x{:04x}", t, s, i)
 }

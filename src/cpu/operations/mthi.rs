@@ -9,29 +9,16 @@ use crate::instruction::Instruction;
 /// to HI" (MTHI):
 ///
 /// mtlo $2
-pub struct Mtlo {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let s = instruction.s();
+
+    registers.set_lo(registers.reg(s));
+    Ok(())
 }
 
-impl Mtlo {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Mtlo {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
 
-impl Operation for Mtlo {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let s = self.instruction.s();
-
-        registers.set_lo(registers.reg(s));
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-
-        format!("mtlo {}", s)
-    }
+    format!("mtlo {}", s)
 }

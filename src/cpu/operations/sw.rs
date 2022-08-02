@@ -7,47 +7,33 @@ use crate::instruction::Instruction;
 use crate::memory::Word;
 
 /// Store Word
-pub struct Sw {
-    instruction: Instruction
-}
+pub fn perform(instruction: &Instruction,  registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let t = instruction.t();
+    let s = instruction.s();
 
-impl Sw {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Sw {
-            instruction
-        }
+    if registers.sr() & 0x10000 != 0 {
+        // Cache is isolated , ignore write
+        warn!("ignoring store while cache is isolated");
+        return Ok(());
+    }
+
+    let addr = registers.reg(s).wrapping_add(i);
+
+    if addr % 4 == 0 {
+        let v = registers.reg(t);
+
+        interconnect.store::<Word>(addr, v);
+        Ok(())
+    } else {
+        Err(Exception::StoreAddressError)
     }
 }
 
-impl Operation for Sw {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.imm_se();
+    let t = instruction.t();
+    let s = instruction.s();
 
-        if registers.sr() & 0x10000 != 0 {
-            // Cache is isolated , ignore write
-            warn!("ignoring store while cache is isolated");
-            return Ok(())
-        }
-
-        let addr = registers.reg(s).wrapping_add(i);
-
-        if addr % 4 == 0 {
-            let v = registers.reg(t);
-
-            interconnect.store::<Word>(addr, v);
-            Ok(())
-        } else {
-            Err(Exception::StoreAddressError)
-        }
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.imm_se();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        format!("SW {}, 0x{:04x}({})", t, i, s)
-    }
+    format!("SW {}, 0x{:04x}({})", t, i, s)
 }

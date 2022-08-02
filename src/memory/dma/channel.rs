@@ -12,7 +12,7 @@ pub struct Channel {
     /// Used to start the DMA transfer when 'sync' is 'Manual'
     trigger: bool,
 
-    /// If true the DMA ”chops” the transfer and lets the CPU run /// in the gaps .
+    /// If true the DMA ”chops” the transfer And lets the CPU run /// in the gaps .
     chop: bool,
 
     /// Chopping DMA window size (log2 number of words)

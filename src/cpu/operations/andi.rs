@@ -5,39 +5,25 @@ use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// We continue with instruction 0x308400ff which is a “bitwise and immediate" (ANDI):
+/// We continue with instruction 0x308400ff which is a “bitwise And immediate" (ANDI):
 ///
 /// andi $4, $4, 0xff
 /// 
-/// We can simply copy the implementation of ORI and replace the | with an &:
-pub struct Andi {
-    instruction: Instruction
+/// We can simply copy the implementation of ORI And replace the | with an &:
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm();
+    let t = instruction.t();
+    let s = instruction.s();
+    let v = registers.reg(s) & i;
+
+    registers.set_reg(t, v);
+    Ok(())
 }
 
-impl Andi {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Andi {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.imm();
+    let t = instruction.t();
+    let s = instruction.s();
 
-impl Operation for Andi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-        let v = registers.reg(s) & i;
-
-        registers.set_reg(t, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.imm();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        format!("ANDI {}, {}, 0x{:04x}", t, s, i)
-    }
+    format!("ANDI {}, {}, 0x{:04x}", t, s, i)
 }

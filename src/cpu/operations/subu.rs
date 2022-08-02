@@ -10,36 +10,23 @@ use crate::instruction::Instruction;
 /// subu $14 , $14 , $4
 ///
 /// The implementation is straightforward:
-pub struct Subu {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let s = instruction.s();
+    let t = instruction.t();
+    let d = instruction.d();
+
+    let v = registers.reg(s).wrapping_sub(registers.reg(t));
+
+    registers.set_reg(d, v);
+
+    Ok(())
 }
 
-impl Subu {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Subu {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
+    let t = instruction.t();
+    let d = instruction.d();
 
-impl Operation for Subu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        let v = registers.reg(s).wrapping_sub(registers.reg(t));
-
-        registers.set_reg(d, v);
-
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        format!("SUBU {}, {}, {}", d, s, t)
-    }
+    format!("SUBU {}, {}, {}", d, s, t)
 }

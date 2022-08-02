@@ -8,37 +8,23 @@ use crate::instruction::Instruction;
 /// Bitwise not or
 ///
 /// nor $25, $2, $zero
-/// It simply computes a bitwise OR between two registers and then complements
+/// It simply computes a bitwise OR between two registers And then complements
 /// the result before storing it in the destination register:
-pub struct Nor {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let d = instruction.d();
+    let s = instruction.s();
+    let t = instruction.t();
+
+    let v = !(registers.reg(s) | registers.reg(t));
+
+    registers.set_reg(d, v);
+    Ok(())
 }
 
-impl Nor {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Nor {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let d = instruction.d();
+    let s = instruction.s();
+    let t = instruction.t();
 
-impl Operation for Nor {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let d = self.instruction.d();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        let v = !(registers.reg(s) | registers.reg(t));
-
-        registers.set_reg(d, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let d = self.instruction.d();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        format!("nor {}, {}, {}", d, s, t)
-    }
+    format!("nor {}, {}, {}", d, s, t)
 }

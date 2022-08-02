@@ -10,42 +10,29 @@ use crate::memory::HalfWord;
 ///
 /// lhu $25 , 430($16)
 ///
-/// It's the 16bit counterpart to LBU and it's our first 16bit load istruction:
-pub struct Lhu {
-    instruction: Instruction
-}
+/// It's the 16bit counterpart to LBU And it's our first 16bit load istruction:
 
-impl Lhu {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Lhu {
-            instruction
-        }
+pub fn perform(instruction: &Instruction,  registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let t = instruction.t();
+    let s = instruction.s();
+
+    let addr = registers.reg(s).wrapping_add(i);
+
+    // Address must be 16 bit aligned
+    if addr % 2 == 0 {
+        let v = interconnect.load::<HalfWord>(addr);
+        load.set(t, v as u32);
+        Ok(())
+    } else {
+        Err(Exception::LoadAddressError)
     }
 }
 
-impl Operation for Lhu {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
+pub fn gnu(instruction: &Instruction) -> String {
+    let t = instruction.t();
+    let s = instruction.s();
+    let i = instruction.imm_se();
 
-        let addr = registers.reg(s).wrapping_add(i);
-
-        // Address must be 16 bit aligned
-        if addr % 2 == 0 {
-            let v = interconnect.load::<HalfWord>(addr);
-            load.set(t, v as u32);
-            Ok(())
-        } else {
-            Err(Exception::LoadAddressError)
-        }
-    }
-
-    fn gnu(&self) -> String {
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-        let i = self.instruction.imm_se();
-
-        format!("lhu {}, 0x{:08x}({})", t, i, s)
-    }
+    format!("lhu {}, 0x{:08x}({})", t, i, s)
 }

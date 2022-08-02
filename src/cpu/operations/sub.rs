@@ -7,44 +7,31 @@ use crate::cpu::operations::Operation;
 use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
-/// “Substract” (SUB) is like SUBU but with signed arithmetics and it triggers an exception on signed
-/// overflow. This instruction is encoded by setting bits [31:26] of the instruction to zero and bits
+/// “Substract” (SUB) is like SUBU but with signed arithmetics And it triggers an exception on signed
+/// overflow. This instruction is encoded by setting bits [31:26] of the instruction to zero And bits
 /// [5:0] to 0x22.
-pub struct Sub {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let s = instruction.s();
+    let t = instruction.t();
+    let d = instruction.d();
+
+    let s = registers.reg(s) as i32;
+    let t = registers.reg(t) as i32;
+
+    match s.checked_sub(t) {
+        Some(v) => {
+            registers.set_reg(d, v as u32);
+            Ok(())
+        }
+        None => Err(Exception::Overflow),
+    }
 }
 
-impl Sub {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Sub {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
+    let t = instruction.t();
+    let d = instruction.d();
 
-impl Operation for Sub {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        let s = registers.reg(s) as i32;
-        let t = registers.reg(t) as i32;
-
-        match s.checked_sub(t) {
-            Some(v) => {
-                registers.set_reg(d, v as u32);
-                Ok(())
-            }
-            None => Err(Exception::Overflow),
-        }
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        format!("sub {}, {}, {}", d, s, t)
-    }
+    format!("sub {}, {}, {}", d, s, t)
 }

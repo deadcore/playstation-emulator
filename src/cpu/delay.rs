@@ -3,9 +3,11 @@ use crate::instruction::RegisterIndex;
 pub struct Delay {
     /// Load initiated by the current instruction (will take effect
     /// after the load delay slot)
-    load: (RegisterIndex, u32),
+    load_index: RegisterIndex,
 
-    /// Set by the current instruction if a branch occurred and the
+    load_value: u32,
+
+    /// Set by the current instruction if a branch occurred And the
     /// next instruction will be in the delay slot.
     branch: bool,
 
@@ -16,22 +18,29 @@ pub struct Delay {
 impl Delay {
     pub fn new() -> Delay {
         Delay {
-            load: (RegisterIndex(0), 0),
+            load_index: RegisterIndex(0),
             branch: false,
             delay_slot: false,
+            load_value: 0,
         }
     }
 
     pub fn set(&mut self, addr: RegisterIndex, val: u32) {
-        self.load = (addr, val)
+        self.load_index = addr;
+        self.load_value = val;
     }
 
     pub fn reset(&mut self) {
-        self.load = (RegisterIndex(0), 0)
+        self.load_index = RegisterIndex(0);
+        self.load_value = 0;
     }
 
-    pub fn value(&self) -> (RegisterIndex, u32) {
-        self.load
+    pub fn register_index(&self) -> RegisterIndex {
+        self.load_index
+    }
+
+    pub fn value(&self) -> u32 {
+        self.load_value
     }
 
     pub fn branch(&self) -> bool {

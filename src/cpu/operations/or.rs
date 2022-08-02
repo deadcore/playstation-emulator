@@ -6,35 +6,21 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
 /// Bitwise or
-pub struct Or {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let d = instruction.d();
+    let s = instruction.s();
+    let t = instruction.t();
+
+    let v = registers.reg(s) | registers.reg(t);
+
+    registers.set_reg(d, v);
+    Ok(())
 }
 
-impl Or {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Or {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let d = instruction.d();
+    let s = instruction.s();
+    let t = instruction.t();
 
-impl Operation for Or {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let d = self.instruction.d();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        let v = registers.reg(s) | registers.reg(t);
-
-        registers.set_reg(d, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let d = self.instruction.d();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        format!("OR {}, {}, {}", d, s, t)
-    }
+    format!("OR {}, {}, {}", d, s, t)
 }

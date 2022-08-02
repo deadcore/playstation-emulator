@@ -150,7 +150,7 @@ impl Registers {
     }
 
     /// Increment PC to point to the next instruction.
-    /// Wrapping add means that we want the PC to wrap back to 0 in case of an overflow (i.e. 0xfffffffc + 4 => 0x00000000)
+    /// Wrapping Add means that we want the PC to wrap back to 0 in case of an overflow (i.e. 0xfffffffc + 4 => 0x00000000)
     /// Increment PC to point to the next instruction . All
     /// instructions are 32bit long.
     pub fn increment_pc(&mut self) {

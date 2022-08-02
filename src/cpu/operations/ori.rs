@@ -6,34 +6,20 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
 /// Bitwise Or Immediate
-pub struct Ori {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm();
+    let t = instruction.t();
+    let s = instruction.s();
+    let v = registers.reg(s) | i;
+
+    registers.set_reg(t, v);
+    Ok(())
 }
 
-impl Ori {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Ori {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.imm();
+    let t = instruction.t();
+    let s = instruction.s();
 
-impl Operation for Ori {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-        let v = registers.reg(s) | i;
-
-        registers.set_reg(t, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.imm();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        format!("ORI {}, {}, 0x{:04x}", t, s, i)
-    }
+    format!("ORI {}, {}, 0x{:04x}", t, s, i)
 }

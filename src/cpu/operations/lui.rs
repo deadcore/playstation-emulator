@@ -6,33 +6,19 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
 /// Load Upper Immediate
-pub struct Lui {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm();
+    let t = instruction.t();
+
+    let v = i << 16;
+
+    registers.set_reg(t, v);
+    Ok(())
 }
 
-impl Lui {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Lui {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.imm();
+    let t = instruction.t();
 
-impl Operation for Lui {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm();
-        let t = self.instruction.t();
-
-        let v = i << 16;
-
-        registers.set_reg(t, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.imm();
-        let t = self.instruction.t();
-
-        format!("LUI {}, 0x{:04x}", t, i)
-    }
+    format!("LUI {}, 0x{:04x}", t, i)
 }

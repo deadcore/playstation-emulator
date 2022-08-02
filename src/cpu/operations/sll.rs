@@ -6,36 +6,22 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 
 /// Shift Left Logic
-pub struct Sll {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.shift();
+    let t = instruction.t();
+    let d = instruction.d();
+
+    let v = registers.reg(t) << i;
+
+    registers.set_reg(d, v);
+
+    Ok(())
 }
 
-impl Sll {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Sll {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.shift();
+    let t = instruction.t();
+    let d = instruction.d();
 
-impl Operation for Sll {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.shift();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        let v = registers.reg(t) << i;
-
-        registers.set_reg(d, v);
-
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.shift();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        format!("SLL {}, {}, {}", d, t, i)
-    }
+    format!("SLL {}, {}, {}", d, t, i)
 }

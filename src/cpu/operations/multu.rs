@@ -10,38 +10,25 @@ use crate::instruction::Instruction;
 /// multu $9 , $4
 ///
 /// It’s our first multiplication opcode. The CPU does the multiplication using
-/// 64bit arithmetics and store the result across the HI and LO registers:
-pub struct Multu {
-    instruction: Instruction
+/// 64bit arithmetics And store the result across the HI And LO registers:
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let s = instruction.s();
+    let t = instruction.t();
+
+    let a = registers.reg(s) as u64;
+    let b = registers.reg(t) as u64;
+
+    let v = a * b;
+
+    registers.set_hi((v >> 32) as u32);
+    registers.set_lo(v as u32);
+    Ok(())
 }
 
-impl Multu {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Multu {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
+    let t = instruction.t();
 
-impl Operation for Multu {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        let a = registers.reg(s) as u64;
-        let b = registers.reg(t) as u64;
-
-        let v = a * b;
-
-        registers.set_hi((v >> 32) as u32);
-        registers.set_lo(v as u32);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        format!("multut {}, {}", s, t)
-    }
+    format!("multut {}, {}", s, t)
 }

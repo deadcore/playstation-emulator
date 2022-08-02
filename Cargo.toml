@@ -2,25 +2,18 @@
 name = 'rust_playstation_emulator'
 version = '0.1.0'
 authors = ['Jack <admin@deadcore.co.uk>']
-edition = '2018'
-
-#[features]
-#default = []
-#metal = ["gfx-backend-metal"]
-#gl = ["gfx-backend-gl", "gfx-backend-gl/glutin"]
-#vulkan = ["gfx-backend-vulkan"]
-#unstable = []
+edition = '2021'
+resolver = "2"
 
 [dependencies]
 log = '^0.4'
 env_logger = '^0.6'
-prettytable-rs = '^0.8'
-wgpu = "0.4.0"
-winit = "0.20.0-alpha4"
+wgpu = "0.12"
+winit = "0.26"
 arrayvec = "0.4"
-shaderc = "0.6"
+shaderc = "0.7"
 gdb-remote-protocol = { git = "https://github.com/luser/rust-gdb-remote-protocol", rev = "3e2f7c7204f85781f8b37d601217b05935547a7f" }
-
+futures="0.3"
 
 [lib]
 name = 'rust_playstation_emulator'

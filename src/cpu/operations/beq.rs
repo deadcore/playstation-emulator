@@ -10,35 +10,21 @@ use crate::instruction::Instruction;
 /// beq $15, $zero, +48
 ///
 /// We can reuse the code of BNE by changing the condition:
-pub struct Beq {
-    instruction: Instruction
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let s = instruction.s();
+    let t = instruction.t();
+
+    if registers.reg(s) == registers.reg(t) {
+        registers.branch(i);
+    }
+    Ok(())
 }
 
-impl Beq {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Beq {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let s = instruction.s();
+    let t = instruction.t();
+    let i = instruction.imm_se();
 
-impl Operation for Beq {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-
-        if registers.reg(s) == registers.reg(t) {
-            registers.branch(i);
-        }
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let s = self.instruction.s();
-        let t = self.instruction.t();
-        let i = self.instruction.imm_se();
-
-        format!("BEQ {}, {}, 0x{:04x}", s, t, i)
-    }
+    format!("BEQ {}, {}, 0x{:04x}", s, t, i)
 }

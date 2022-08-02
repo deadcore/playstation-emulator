@@ -9,41 +9,28 @@ use crate::instruction::Instruction;
 ///
 /// sra $4, $4, 24
 ///
-/// There are two versions of the shift right instruction: arithmetic and logical. The arithmetic
-/// version considers that the value is signed and use the sign bit to fill the missing MSBs in the
+/// There are two versions of the shift right instruction: arithmetic And logical. The arithmetic
+/// version considers that the value is signed And use the sign bit to fill the missing MSBs in the
 /// register after the shift.
 ///
-/// In Rust, C and C++ we can achieve the same behavior by casting the register value to a signed
+/// In Rust, C And C++ we can achieve the same behavior by casting the register value to a signed
 /// integer before doing the shift:
-pub struct Sra {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.shift();
+    let t = instruction.t();
+    let d = instruction.d();
+
+    let v = (registers.reg(t) as i32) >> i;
+
+    registers.set_reg(d, v as u32);
+    Ok(())
 }
 
-impl Sra {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Sra {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let i = instruction.shift();
+    let t = instruction.t();
+    let d = instruction.d();
 
-impl Operation for Sra {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.shift();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        let v = (registers.reg(t) as i32) >> i;
-
-        registers.set_reg(d, v as u32);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let i = self.instruction.shift();
-        let t = self.instruction.t();
-        let d = self.instruction.d();
-
-        format!("SRA {}, {}, {}", d, t, i)
-    }
+    format!("SRA {}, {}, {}", d, t, i)
 }

@@ -6,18 +6,6 @@ use crate::cpu::registers::Registers;
 use crate::instruction::Instruction;
 use crate::memory::Byte;
 
-pub struct Lb {
-    instruction: Instruction
-}
-
-impl Lb {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Lb {
-            instruction
-        }
-    }
-}
-
 /// The next unhandled instruction is 0x81efe288 which encodes “load byte" (LB). As you can guess
 /// it's like LW except that it only loads 8bits from the memory:
 ///
@@ -26,25 +14,24 @@ impl Lb {
 /// Since the general purpose registers are always 32bit LB only loads the low 8bits of the register.
 /// The byte is treated like a signed value so it's sign extended to the full 32bits. Of course like
 /// LW there's a load delay of one instruction. We can implement it like this14:
-impl Operation for Lb {
-    fn perform(&self, registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
-        let i = self.instruction.imm_se();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
 
-        let addr = registers.reg(s).wrapping_add(i);
+pub fn perform(instruction: &Instruction,  registers: &mut Registers, interconnect: &mut Interconnect, load: &mut Delay) -> Result<(), Exception> {
+    let i = instruction.imm_se();
+    let t = instruction.t();
+    let s = instruction.s();
 
-        let v = interconnect.load::<Byte>(addr) as i8;
+    let addr = registers.reg(s).wrapping_add(i);
 
-        load.set(t, v as u32);
-        Ok(())
-    }
+    let v = interconnect.load::<Byte>(addr) as i8;
 
-    fn gnu(&self) -> String {
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-        let i = self.instruction.imm_se();
+    load.set(t, v as u32);
+    Ok(())
+}
 
-        format!("LB {}, 0x{:08x}({})", t, i, s)
-    }
+pub fn gnu(instruction: &Instruction) -> String {
+    let t = instruction.t();
+    let s = instruction.s();
+    let i = instruction.imm_se();
+
+    format!("LB {}, 0x{:08x}({})", t, i, s)
 }

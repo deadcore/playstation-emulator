@@ -13,35 +13,22 @@ use crate::instruction::Instruction;
 /// The implementation is quite simple but there's something to consider: so far the shift amount
 /// was always a 5bit immediate value but this time it's a 32bit register. What happens when the
 /// register value is greater than 31?
-pub struct Sllv {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let d = instruction.d();
+    let t = instruction.t();
+    let s = instruction.s();
+
+    let v = registers.reg(t) << (registers.reg(s) & 0x1f);
+
+    registers.set_reg(d, v);
+    Ok(())
 }
 
-impl Sllv {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Sllv {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let d = instruction.d();
+    let t = instruction.t();
+    let s = instruction.s();
 
-impl Operation for Sllv {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let d = self.instruction.d();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        let v = registers.reg(t) << (registers.reg(s) & 0x1f);
-
-        registers.set_reg(d, v);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let d = self.instruction.d();
-        let t = self.instruction.t();
-        let s = self.instruction.s();
-
-        format!("sllv {}, {}, {}", d, t, s)
-    }
+    format!("sllv {}, {}, {}", d, t, s)
 }

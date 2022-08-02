@@ -16,4 +16,4 @@ My focus when witting this emulator is to maintain a clean, easy to adopt code b
 - [ ] More accurate timings
 
 ## Credit
-* [simias](https://github.com/simias/psx-guide) and his guide. It's incredible
+* [simias](https://github.com/simias/psx-guide) And his guide. It's incredible

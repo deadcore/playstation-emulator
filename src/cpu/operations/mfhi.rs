@@ -11,30 +11,17 @@ use crate::instruction::Instruction;
 ///
 /// Like MFLO it should be able to stall if the operation has not yet finished
 /// but we'll implement that later:
-pub struct Mfhi {
-    instruction: Instruction
+
+pub fn perform(instruction: &Instruction, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
+    let d = instruction.d();
+    let hi = registers.hi();
+
+    registers.set_reg(d, hi);
+    Ok(())
 }
 
-impl Mfhi {
-    pub fn new(instruction: Instruction) -> impl Operation {
-        Mfhi {
-            instruction
-        }
-    }
-}
+pub fn gnu(instruction: &Instruction) -> String {
+    let d = instruction.d();
 
-impl Operation for Mfhi {
-    fn perform(&self, registers: &mut Registers, _: &mut Interconnect, _: &mut Delay) -> Result<(), Exception> {
-        let d = self.instruction.d();
-        let hi = registers.hi();
-
-        registers.set_reg(d, hi);
-        Ok(())
-    }
-
-    fn gnu(&self) -> String {
-        let d = self.instruction.d();
-
-        format!("MFHI {}", d)
-    }
+    format!("MFHI {}", d)
 }
