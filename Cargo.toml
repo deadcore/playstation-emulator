@@ -2,18 +2,17 @@
 name = 'rust_playstation_emulator'
 version = '0.1.0'
 authors = ['Jack <admin@deadcore.co.uk>']
-edition = '2021'
-resolver = "2"
+edition = "2021"
 
 [dependencies]
+wgpu = "0.19.1"
+winit = "0.29.10"
+env_logger = "^0.10"
 log = '^0.4'
-env_logger = '^0.6'
-wgpu = "0.12"
-winit = "0.26"
+prettytable-rs = '^0.8'
 arrayvec = "0.4"
-shaderc = "0.7"
-gdb-remote-protocol = { git = "https://github.com/luser/rust-gdb-remote-protocol", rev = "3e2f7c7204f85781f8b37d601217b05935547a7f" }
-futures="0.3"
+futures = "0.3.30"
+bytemuck = { version = "^1.14", features = ["derive"] }
 
 [lib]
 name = 'rust_playstation_emulator'
@@ -22,3 +21,7 @@ path = 'src/lib.rs'
 [[bin]]
 name = 'rust_playstation_emulator'
 path = 'src/bin/emulator.rs'
+
+[[bin]]
+name = 'cube_example'
+path = 'src/bin/cube.rs'

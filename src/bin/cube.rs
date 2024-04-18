@@ -1,40 +1,16 @@
+extern crate env_logger;
+extern crate log;
+
 use std::borrow::Cow;
-use std::{fmt, mem};
-use std::sync::Arc;
+use std::mem;
 
 use bytemuck::{Pod, Zeroable};
 use wgpu::{Device, Queue, RenderPipeline, Surface};
 use wgpu::util::DeviceExt;
-use winit::{
-    event_loop::EventLoop,
-    window::Window,
-};
-
-/// Maximum number of vertex that can be stored in an attribute
-/// buffers
-const VERTEX_BUFFER_LEN: usize = 64 * 1024;
-
-#[repr(C)]
-#[derive(Clone, Copy, Debug, Pod, Zeroable)]
-pub struct Vertex {
-    position: [f32; 3],
-    color: [f32; 3],
-}
-
-impl Vertex {
-    pub fn new(pos: Position, color: Color) -> Vertex {
-        Vertex {
-            position: [pos.x as f32, pos.y as f32, 0.0],
-            color: [color.r as f32, color.g as f32, color.b as f32],
-        }
-    }
-}
-
-impl fmt::Display for Vertex {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Vertex({:?}, {:?})", self.position, self.color)
-    }
-}
+use winit::dpi::LogicalSize;
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::EventLoop;
+use winit::window::{Window, WindowBuilder};
 
 #[derive(Copy, Clone, Default, Debug)]
 pub struct Position {
@@ -43,24 +19,18 @@ pub struct Position {
 }
 
 impl Position {
-    pub fn new(x: i16, y: i16) -> Position {
-        Position {
+    pub fn new(x: i16, y: i16) -> rust_playstation_emulator::gpu::opengl::Position {
+        rust_playstation_emulator::gpu::opengl::Position {
             x: x,
             y: y,
         }
     }
 
-    pub fn from_packed(val: u32) -> Position {
+    pub fn from_packed(val: u32) -> rust_playstation_emulator::gpu::opengl::Position {
         let x = val as i16;
         let y = (val >> 16) as i16;
 
-        Position { x, y }
-    }
-}
-
-impl fmt::Display for Position {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Position({}, {})", self.x, self.y)
+        rust_playstation_emulator::gpu::opengl::Position { x, y }
     }
 }
 
@@ -72,20 +42,20 @@ pub struct Color {
 }
 
 impl Color {
-    pub fn new(r: u8, g: u8, b: u8) -> Color {
-        Color {
+    pub fn new(r: u8, g: u8, b: u8) -> rust_playstation_emulator::gpu::opengl::Color {
+        rust_playstation_emulator::gpu::opengl::Color {
             r: r,
             g: g,
             b: b,
         }
     }
 
-    pub fn from_packed(val: u32) -> Color {
+    pub fn from_packed(val: u32) -> rust_playstation_emulator::gpu::opengl::Color {
         let r = val as u8;
         let g = (val >> 8) as u8;
         let b = (val >> 16) as u8;
 
-        Color {
+        rust_playstation_emulator::gpu::opengl::Color {
             r: r,
             g: g,
             b: b,
@@ -93,32 +63,79 @@ impl Color {
     }
 }
 
-impl fmt::Display for Color {
-    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
-        write!(f, "Color({}, {}, {})", self.r, self.g, self.b)
+#[repr(C)]
+#[derive(Clone, Copy, Debug, Pod, Zeroable)]
+pub struct Vertex {
+    position: [f32; 3],
+    color: [f32; 3],
+}
+
+fn vertex(pos: [i8; 3], tc: [i8; 3]) -> Vertex {
+    Vertex {
+        position: [pos[0] as f32, pos[1] as f32, pos[2] as f32],
+        color: [tc[0] as f32, tc[1] as f32, tc[2] as f32],
     }
 }
 
-pub struct Renderer {
+fn main() {
+    env_logger::builder().init();
+
+    let event_loop = EventLoop::new().unwrap();
+
+    let fb_x_res = 1024;
+    let fb_y_res = 512;
+
+    let window = WindowBuilder::new()
+        .with_inner_size(LogicalSize::new(fb_x_res as f64, fb_y_res as f64))
+        .build(&event_loop)
+        .unwrap();
+
+    let mut app = App::from(window);
+
+    let _ = event_loop.run(move |event, target| {
+        if let Event::WindowEvent {
+            window_id: _,
+            event,
+        } = event
+        {
+            match event {
+                WindowEvent::RedrawRequested => {
+                    app.push_triangle(&[
+                        Vertex { position: [512.0, 128.0, 0.0], color: [1.0, 0.0, 0.0] },
+                        Vertex { position: [256.0, 384.0, 0.0], color: [0.0, 1.0, 0.0] },
+                        Vertex { position: [768.0, 384.0, 0.0], color: [0.0, 0.0, 1.0] },
+                    ]);
+                    app.draw();
+                    // window.request_redraw();
+                }
+                WindowEvent::CloseRequested => target.exit(),
+                _ => {}
+            };
+        }
+    });
+}
+
+
+struct App {
     fb_y_res: u32,
     fb_x_res: u32,
     buffer: Vec<Vertex>,
+    nvertices: u32,
     device: Device,
     queue: Queue,
     pipeline: RenderPipeline,
     surface: Surface<'static>,
-    window: Arc<Window>
 }
 
-impl Renderer {
-    pub fn new(_event_loop: &EventLoop<()>, window: Arc<Window>) -> Renderer {
+impl App {
+    fn from(window: Window) -> Self {
         let mut size = window.inner_size();
         size.width = size.width.max(1);
         size.height = size.height.max(1);
 
         let instance = wgpu::Instance::default();
 
-        let surface = instance.create_surface(window.clone()).unwrap();
+        let surface = instance.create_surface(window).unwrap();
         let adapter = futures::executor::block_on(instance
             .request_adapter(&wgpu::RequestAdapterOptions {
                 power_preference: wgpu::PowerPreference::default(),
@@ -202,91 +219,29 @@ impl Renderer {
         });
 
 
+
         Self {
             fb_y_res: 512,
             fb_x_res: 1024,
             device,
             queue,
-            buffer: Vec::with_capacity(VERTEX_BUFFER_LEN),
+            buffer: Vec::with_capacity(1024),
+            nvertices: 0,
             pipeline,
             surface,
-            window: window,
         }
     }
 
-    /// Add a triangle to the draw buffer
     pub fn push_triangle(&mut self, vertices: &[Vertex; 3]) {
-        debug!("Current number of vertices in the buffer: [{} / {}]. Pushing a vertices to the frame {:?}", self.buffer.len(), VERTEX_BUFFER_LEN, vertices);
-
-
-        // Make sure we have enough room left to queue the vertex. We
-        // need to push two triangles to draw a quad, so 6 vertex
-        if self.buffer.len() + 3 > VERTEX_BUFFER_LEN {
-            debug!("The vertex attribute buffers are full, force an early draw");
-            self.draw();
-        }
+        // self.buffer.push(Vertex { position: [((vertices[0].position[0] / 1024.0) * 2.0) - 1.0, 1.0 - (vertices[0].position[1] / 512.0) * 2.0, 0.0], color: vertices[0].color });
         self.buffer.push(vertices[0]);
+        // self.buffer.push(Vertex { position: [((vertices[1].position[0] / 1024.0) * 2.0) - 1.0, 1.0 - (vertices[1].position[1] / 512.0) * 2.0, 0.0], color: vertices[1].color });
         self.buffer.push(vertices[1]);
+        // self.buffer.push(Vertex { position: [((vertices[2].position[0] / 1024.0) * 2.0) - 1.0, 1.0 - (vertices[2].position[1] / 512.0) * 2.0, 0.0], color: vertices[2].color });
         self.buffer.push(vertices[2]);
+        // self.nvertices += 3;
     }
 
-    /// Add a quad to the draw buffer
-    pub fn push_quad(&mut self, vertices: &[Vertex; 4]) {
-        debug!("Pushing a quad to the frame {:?}", vertices);
-
-        if self.buffer.len() + 6 > VERTEX_BUFFER_LEN {
-            self.draw();
-        }
-
-        self.push_triangle(&[vertices[0], vertices[1], vertices[2]]);
-        self.push_triangle(&[vertices[1], vertices[2], vertices[3]]);
-    }
-
-    /// Set the value of the uniform draw offset
-    pub fn set_draw_offset(&mut self, _x: i16, _y: i16) {
-        // Force draw for the primitives with the current offset
-        self.draw();
-
-//        self.uniforms = uniform! {
-//            offset : [x as i32, y as i32],
-//        }
-    }
-
-    /// Set the drawing area. Coordinates are offsets in the
-    /// PlayStation VRAM
-    pub fn set_drawing_area(&mut self,
-                            left: u16, top: u16,
-                            right: u16, bottom: u16) {
-        // Render any pending primitives
-        self.draw();
-
-        let fb_x_res = self.fb_x_res as i32;
-        let fb_y_res = self.fb_y_res as i32;
-
-        // Scale PlayStation VRAM coordinates if our framebuffer is
-        // not at the native resolution
-        let left = (left as i32 * fb_x_res) / 1024;
-        let right = (right as i32 * fb_x_res) / 1024;
-
-        let top = (top as i32 * fb_y_res) / 512;
-        let bottom = (bottom as i32 * fb_y_res) / 512;
-
-        // Width and height are inclusive
-        let width = right - left + 1;
-        let height = bottom - top + 1;
-
-        // OpenGL has (0, 0) at the bottom left, the PSX at the top left
-        let bottom = fb_y_res - bottom - 1;
-
-        if width < 0 || height < 0 {
-            // XXX What should we do here?
-            println!("Unsupported drawing area: {}x{} [{}x{}->{}x{}]",
-                     width, height,
-                     left, top, right, bottom);
-        } else {}
-    }
-
-    /// Draw the buffered commands and reset the buffers
     pub fn draw(&mut self) {
         let mut encoder = self.device.create_command_encoder(&wgpu::CommandEncoderDescriptor { label: None });
 
@@ -299,7 +254,8 @@ impl Renderer {
         let frame = self.surface
             .get_current_texture()
             .expect("Failed to acquire next swap chain texture");
-        let view = frame.texture
+        let view = frame
+            .texture
             .create_view(&wgpu::TextureViewDescriptor::default());
 
 
@@ -310,7 +266,12 @@ impl Renderer {
                     view: &view,
                     resolve_target: None,
                     ops: wgpu::Operations {
-                        load: wgpu::LoadOp::Clear(wgpu::Color::BLACK),
+                        load: wgpu::LoadOp::Clear(wgpu::Color {
+                            r: 0.1,
+                            g: 0.2,
+                            b: 0.3,
+                            a: 1.0,
+                        }),
                         store: wgpu::StoreOp::Store,
                     },
                 })],
@@ -321,7 +282,7 @@ impl Renderer {
             rpass.push_debug_group("Prepare data for draw.");
             rpass.set_pipeline(&self.pipeline);
             rpass.set_vertex_buffer(0, vertex_buf.slice(..));
-            rpass.draw(0..(self.buffer.len() as u32), 0..1);
+            rpass.draw(0..3, 0..1);
 
             rpass.pop_debug_group();
             rpass.insert_debug_marker("Draw!");
@@ -335,22 +296,5 @@ impl Renderer {
         self.queue.submit(Some(encoder.finish()));
 
         frame.present();
-        self.window.request_redraw();
-        // self.buffer.clear();
-    }
-
-    /// Draw the buffered commands and display them
-    pub fn display(&mut self) {
-        self.draw();
-        debug!("Displaying the view");
-    }
-}
-
-
-trait Block {
-    fn wait(self) -> <Self as futures::Future>::Output
-        where Self: Sized, Self: futures::Future
-    {
-        futures::executor::block_on(self)
     }
 }

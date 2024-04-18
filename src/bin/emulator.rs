@@ -3,14 +3,12 @@ extern crate log;
 
 use std::env;
 use std::path::Path;
+use std::sync::Arc;
 
-use shaderc;
-use winit::{
-    event,
-    event_loop::{ControlFlow, EventLoop},
-};
-
-use log::debug;
+use winit::dpi::LogicalSize;
+use winit::event::{Event, WindowEvent};
+use winit::event_loop::EventLoop;
+use winit::window::WindowBuilder;
 
 use rust_playstation_emulator::bios::Bios;
 use rust_playstation_emulator::cpu::Cpu;
@@ -18,7 +16,6 @@ use rust_playstation_emulator::cpu::interconnect::Interconnect;
 use rust_playstation_emulator::gpu::Gpu;
 use rust_playstation_emulator::gpu::opengl::Renderer;
 use rust_playstation_emulator::memory::ram::Ram;
-use winit::event::Event;
 
 fn main() {
     env_logger::builder()
@@ -29,14 +26,22 @@ fn main() {
 
     let bios_filepath = match env::args().nth(1) {
         Some(x) => x,
-        None => panic!("usage: rpsx rom game")
+        None => panic!("usage: rpsx.exe rom game")
     };
 
-    let event_loop = EventLoop::new();
+    let event_loop = EventLoop::new().unwrap();
 
-    let display = Renderer::new(&event_loop);
+    let fb_x_res = 1024;
+    let fb_y_res = 512;
 
-    let bios = Bios::new(bios_filepath).unwrap();
+    let window = Arc::new(WindowBuilder::new()
+        .with_inner_size(LogicalSize::new(fb_x_res as f64, fb_y_res as f64))
+        .build(&event_loop)
+        .unwrap());
+
+    let display = Renderer::new(&event_loop, window.clone());
+
+    let bios = Bios::new(&Path::new(&bios_filepath)).unwrap();
     let ram = Ram::new();
     let gpu = Gpu::new(display);
 
@@ -49,66 +54,24 @@ fn main() {
 
     let mut running = true;
 
-    event_loop.run(move |event, _, control_flow| {
-        *control_flow = if cfg!(feature = "metal-auto-capture") {
-            ControlFlow::Exit
-        } else {
-            ControlFlow::Poll
-        };
-        match event {
-            event::Event::WindowEvent { event, .. } => match event {
-                event::WindowEvent::KeyboardInput {
-                    input:
-                    event::KeyboardInput {
-                        virtual_keycode: Some(event::VirtualKeyCode::Escape),
-                        state: event::ElementState::Pressed,
-                        ..
-                    },
-                    ..
-                } | event::WindowEvent::CloseRequested => {
-                    *control_flow = ControlFlow::Exit;
-                }
-                _ => {}
-            },
-            // // event::Event::EventsCleared => {
-            // //     while running {
-            // //         for _ in 0..1_000_000 {
-            // //             cpu.run_next_instruction();
-            // //         }
-            // //     }
-            // // }
-            // _ => (),
-            Event::NewEvents(evt) => {
-                debug!("Event::NewEvents - {:?}", evt)
-            }
-            Event::DeviceEvent { device_id, event } => {
-                debug!("Event::DeviceEvent - device_id: {:?}, event: {:?}", device_id, event)
-            }
-            Event::UserEvent(evt) => {
-                debug!("Event::UserEvent - {:?}", evt)
-            }
-            Event::Suspended => {
-                debug!("Event::Suspended")
-            }
-            Event::Resumed => {
-                debug!("Event::Resumed")
-            }
-            Event::MainEventsCleared => {
-                debug!("Event::MainEventsCleared")
-            }
-            Event::RedrawRequested(evt) => {
-                debug!("Event::RedrawRequested - {:?}", evt)
-            }
-            Event::RedrawEventsCleared => {
-                while running {
-                    for _ in 0..1_000_000 {
+    let _ = event_loop.run(move |event, target| {
+        if let Event::WindowEvent {
+            window_id: _,
+            event,
+        } = event
+        {
+            match event {
+                WindowEvent::RedrawRequested => {
+                    while running {
+                    for i in 0..1_000_000 {
                         cpu.run_next_instruction();
+                        // window.request_redraw()
+                    }
                     }
                 }
-            }
-            Event::LoopDestroyed => {
-                println!("Event::LoopDestroyed")
-            }
+                WindowEvent::CloseRequested => target.exit(),
+                _ => {}
+            };
         }
     });
 }
